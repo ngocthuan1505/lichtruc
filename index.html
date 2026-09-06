@@ -124,7 +124,7 @@
     <div class="container">
         <div class="panel" id="leaderboard-section">
             <h2 style="color: #f57f17; margin-top: 0;">
-                🏆 Bảng Xếp Hạng Cư Xá 
+                🏆 Bảng Phong Thần Cư Xá 
                 <button onclick="toggleLeaderboard()" class="btn-history" style="float: right;">Ẩn / Hiện Bảng</button>
                 <button onclick="toggleScoreColumn()" class="btn-warning" style="float: right; margin-right: 10px;">👁️ Ẩn / Hiện Điểm Số</button>
             </h2>
@@ -288,6 +288,7 @@
         <div class="modal-content">
             <span class="close-btn" onclick="closeSyncModal()">&times;</span>
             <h2 style="margin-top: 0;">🔄 Đồng Bộ Nhiều Thiết Bị</h2>
+            <div id="sync-diagnostic-banner" style="display:none; background:#fdecea; border:1px solid #f5c6cb; color:#611a15; padding:10px 12px; border-radius:6px; font-size:13px; margin-bottom:12px; line-height:1.6;"></div>
             <p class="note">Dữ liệu mặc định chỉ lưu trên máy này (localStorage). Để nhiều iPhone cùng xem/sửa chung 1 lịch, cần kết nối tới 1 Firebase Realtime Database miễn phí (chỉ cần làm 1 lần).</p>
 
             <ol style="font-size: 14px; line-height: 1.6;">
@@ -492,7 +493,19 @@
                 dbRef = firebase.database().ref('cuxa_data');
                 syncEnabled = true;
                 updateSyncStatusUI('connecting');
+
+                // V28: Nếu sau 10 giây vẫn chưa nhận được phản hồi nào từ server (kẹt ở "Đang kết nối"),
+                // báo lỗi rõ ràng thay vì treo vô thời hạn - để người dùng biết mà kiểm tra Rules/mạng/URL.
+                let gotFirstResponse = false;
+                setTimeout(() => {
+                    if (!gotFirstResponse) {
+                        updateSyncStatusUI('error');
+                        console.error('Firebase: hết thời gian chờ, không kết nối được sau 10 giây.');
+                    }
+                }, 10000);
+
                 dbRef.on('value', (snapshot) => {
+                    gotFirstResponse = true;
                     let remote = snapshot.val();
                     if (!remote) { updateSyncStatusUI('online'); return; } // Chưa có gì trên server, lần lưu đầu sẽ đẩy lên
                     // V27: Chặn dữ liệu CŨ (đến trễ do độ trễ mạng) đè lên dữ liệu MỚI mình vừa lưu -
@@ -503,7 +516,7 @@
                     if (isEditMode) { pendingRemoteData = remote; updateSyncStatusUI('pending'); return; }
                     applyRemoteState(remote);
                     updateSyncStatusUI('online');
-                }, (err) => { console.error(err); updateSyncStatusUI('error'); });
+                }, (err) => { gotFirstResponse = true; console.error(err); updateSyncStatusUI('error'); });
             } catch (e) { console.error(e); updateSyncStatusUI('error'); }
         }
 
@@ -518,6 +531,16 @@
 
         function openSyncModal() {
             document.getElementById('sync-config-input').value = firebaseConfig ? JSON.stringify(firebaseConfig, null, 2) : '';
+            let banner = document.getElementById('sync-diagnostic-banner');
+            if (syncStatus === 'error') {
+                banner.style.display = 'block';
+                banner.innerHTML = `⚠️ <b>Đang lỗi kết nối / kẹt "Đang kết nối" quá 10 giây.</b> Kiểm tra theo thứ tự:<br>
+                    1. Đang dùng WiFi hay 4G? Thử đổi sang mạng khác xem có đỡ không (vài mạng di động chặn kết nối realtime).<br>
+                    2. Vào Firebase Console → Realtime Database → tab <b>Rules</b> → chắc chắn đã bấm <b>Publish</b> (không chỉ gõ chữ mà chưa lưu).<br>
+                    3. So sánh <code>databaseURL</code> ở khung dưới với đúng URL hiển thị đầu trang <b>Data</b> trong Firebase Console - phải khớp 100%.`;
+            } else {
+                banner.style.display = 'none';
+            }
             document.getElementById('sync-modal').style.display = 'block';
         }
         function closeSyncModal() { document.getElementById('sync-modal').style.display = 'none'; }
