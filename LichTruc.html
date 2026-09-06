@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Lịch Trực Cư Xá">
+    <title>Hệ Thống Quản Lý Trực Nhà Cư Xá v22</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f4f6f9; color: #333; }
+        h1, h2, h3 { color: #2c3e50; margin-top: 0; }
+        .container { display: flex; flex-direction: column; gap: 20px; padding-bottom: 90px; }
+        .fab-container { position: fixed; right: 16px; bottom: 16px; z-index: 500; display: flex; flex-direction: column; gap: 10px; }
+        .fab-btn { border-radius: 50%; width: 46px; height: 46px; padding: 0 !important; font-size: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.35); margin: 0 !important; }
+        .section-toggle-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .history-select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; }
+        .panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; height: 40px; }
+        th { background-color: #4285f4; color: white; }
+        .bg-tret-nvs { background-color: #0f9d58; color: white; }
+        .bg-fridge { background-color: #4285f4; color: white; }
+        .missed { color: red; font-weight: bold; }
+        .double-missed { color: red; font-weight: bold; text-decoration: underline; }
+        .tuoc-luot { color: #d93025; font-weight: bold; }
+        .frozen { color: #00bcd4; font-style: italic; }
+        .long-leave-badge { background: #9e9e9e; color: white; padding: 3px 6px; border-radius: 4px; font-size: 11px; margin-left: 5px; font-weight: bold;}
+        
+        button { background-color: #4285f4; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; margin: 2px; }
+        button:hover { background-color: #3367d6; }
+        .btn-danger { background-color: #ea4335; }
+        .btn-danger:hover { background-color: #c5221f; }
+        .btn-success { background-color: #34a853; }
+        .btn-success:hover { background-color: #2c8c45; }
+        .btn-warning { background-color: #fbbc04; color: black; }
+        .btn-history { background-color: #6c757d; }
+        .btn-history:hover { background-color: #5a6268; }
+        .btn-edit { background-color: #9c27b0; }
+        .btn-edit:hover { background-color: #7b1fa2; }
+        .btn-freeze { background-color: #00bcd4; }
+        
+        .checkbox-cell { cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        .status-done { background-color: #d4edda !important; color: #155724; }
+        .status-missed { background-color: #f8d7da !important; color: #721c24; }
+        .empty-cell { background-color: #f8f9fa; }
+        .note { color: #d93025; font-style: italic; font-weight: bold; font-size: 0.9em; }
+        
+        #debug-section, #history-section, #config-section, #leaderboard-section { background: #fff; padding: 15px; border-radius: 5px; margin-top: 10px; display: none; border: 2px dashed #ccc; }
+        #debug-section { background: #282c34; color: #abb2bf; border: none; }
+        #leaderboard-section { display: block; border: 2px solid #fbbc04; background: #fffdf2; }
+        textarea { width: 100%; height: 200px; background: #1e1e1e; color: #d4d4d4; font-family: monospace; border: 1px solid #555; padding: 10px; }
+        
+        .matrix-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white;}
+        .matrix-table th, .matrix-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        .matrix-table th { background-color: #ff9800; color: white; }
+        .matrix-table td:first-child { font-weight: bold; text-align: left; padding-left: 15px; background-color: #fff8e1;}
+        .matrix-table input[type="checkbox"] { transform: scale(1.5); cursor: pointer; }
+        .config-th { background-color: #607d8b !important; }
+        .leave-th { background-color: #d32f2f !important; }
+        .disabled-checkbox { opacity: 0.3; cursor: not-allowed !important;}
+        
+        input[type="text"], select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; }
+        .add-member-bar { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; background: #e8f0fe; padding: 15px; border-radius: 5px;}
+        .busy-settings { background: #fff3e0; padding: 15px; border-radius: 5px; border-left: 5px solid #ff9800; }
+        .holiday-settings { background: #e0f7fa; padding: 15px; border-radius: 5px; border-left: 5px solid #00bcd4; margin-top: 15px;}
+        .holiday-checkboxes { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px; font-weight: bold; font-size: 15px;}
+        .holiday-checkboxes label { cursor: pointer; display: flex; align-items: center; gap: 5px;}
+        .holiday-checkboxes input[type="checkbox"] { transform: scale(1.3); }
+
+        select.manual-select { width: 95%; padding: 6px; font-weight: bold; text-align: center; border: 2px solid #9c27b0; border-radius: 4px; font-size: 13px;}
+        .manual-select.busy-warn { border-color: red; color: red; background: #ffebee;}
+        .live-stats-bar { background: #f3e5f5; padding: 10px; border-radius: 5px; border: 1px solid #ab47bc; margin-bottom: 10px; display: none; font-size: 13px;}
+        .live-stat-item { display: inline-block; background: white; padding: 3px 8px; border-radius: 15px; border: 1px solid #ccc; margin: 2px; font-weight: bold;}
+
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); }
+        .modal-content { background-color: #fff; margin: 5% auto; padding: 20px; border-radius: 8px; width: 600px; max-width: 95%; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover { color: black; }
+        .penalty-list { background: #f8d7da; padding: 10px; border-radius: 5px; margin-bottom: 15px; min-height: 50px;}
+        .penalty-item { background: white; padding: 8px; margin: 5px 0; border-left: 4px solid #dc3545; display: flex; justify-content: space-between; align-items: center;}
+        .penalty-form { background: #e2e3e5; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #6c757d;}
+        
+        .medal-icon { font-size: 1.2em; margin-right: 5px;}
+        .score-col { display: none; background-color: #fffde7; } 
+
+        .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        @media (max-width: 600px) {
+            body { margin: 8px; }
+            h1 { font-size: 1.2em; }
+            .panel { padding: 12px; }
+            table, .matrix-table { font-size: 12px; }
+            th, td, .matrix-table th, .matrix-table td { padding: 5px; }
+            button { padding: 8px 10px; font-size: 12px; }
+            .add-member-bar { flex-direction: column; align-items: stretch; }
+            .modal-content { width: 95%; margin: 10% auto; padding: 12px; }
+            /* Chặn Safari iOS tự zoom khi bấm vào input/select (yêu cầu font-size >= 16px) */
+            input, select, textarea { font-size: 16px !important; }
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #schedule-capture, #schedule-capture * { visibility: visible; }
+            #schedule-capture { position: absolute; left: 0; top: 0; width: 100%; }
+            .fab-container, .modal, #debug-section { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Quản Lý Lịch Trực Cư Xá (V22 - Đồng Bộ Real-Time)</h1>
+
+    <div class="container">
+        <div class="panel" id="leaderboard-section">
+            <h2 style="color: #f57f17; margin-top: 0;">
+                🏆 Bảng Xếp Hạng Cư Xá 
+                <button onclick="toggleLeaderboard()" class="btn-history" style="float: right;">Ẩn / Hiện Bảng</button>
+                <button onclick="toggleScoreColumn()" class="btn-warning" style="float: right; margin-right: 10px;">👁️ Ẩn / Hiện Điểm Số</button>
+            </h2>
+            <div id="lb-content">
+                <div class="table-scroll">
+                <table style="margin-top: 5px;">
+                    <thead>
+                        <tr style="background-color: #fbc02d; color: #333;">
+                            <th>Hạng</th>
+                            <th>Tên</th>
+                            <th>✅ Ca Hoàn Thành</th>
+                            <th>❌ Lần Bùng Trực</th>
+                            <th>⚠️ Đang Nợ (Chờ xếp)</th>
+                            <th class="score-col">🌟 Điểm Xét Duyệt</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body"></tbody>
+                </table>
+                </div>
+                <p id="score-formula-text" style="font-size: 0.85em; color: #666; margin-bottom: 0; display: none;"><i>* Điểm Xét Duyệt = Hoàn Thành x 10đ - Bùng x 20đ.</i></p>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>👥 Danh Sách Quản Lý Nhân Sự (<span id="member-count">0</span> TV)</h2>
+            <div class="add-member-bar">
+                <input type="text" id="new-member-name" placeholder="Nhập tên người mới...">
+                <button onclick="addMember()" class="btn-success">+ Thêm Người</button>
+            </div>
+            <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tên</th>
+                        <th>Nợ Trực Chi Tiết</th>
+                        <th>Đã Off?</th>
+                        <th style="background-color: #fbbc04; color: black;">Đã Gánh Ca?</th>
+                        <th>Tủ Lạnh?</th>
+                        <th>NVS?</th>
+                        <th style="min-width: 150px;">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="member-table-body"></tbody>
+            </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>⚙️ Cấu Hình Đầu Việc Tự Động <button onclick="toggleConfig()" class="btn-history" style="float: right;">Hiển thị / Ẩn</button></h2>
+            <div id="config-section">
+                <div style="overflow-x: auto;">
+                    <table class="matrix-table">
+                        <thead>
+                            <tr>
+                                <th class="config-th">Công việc</th>
+                                <th class="config-th">Thứ 2</th><th class="config-th">Thứ 3</th><th class="config-th">Thứ 4</th><th class="config-th">Thứ 5</th><th class="config-th">Thứ 6</th><th class="config-th">Thứ 7</th><th class="config-th">Chủ Nhật</th>
+                            </tr>
+                        </thead>
+                        <tbody id="config-matrix-body"></tbody>
+                    </table>
+                </div>
+                <div class="holiday-settings">
+                    <h3 style="margin-top: 0; color: #0097a7;">🌴 Ngày Nghỉ Lễ / Sự Kiện Chung Cư Xá</h3>
+                    <div class="holiday-checkboxes" id="holiday-checkboxes-container"></div>
+                    <button onclick="toggleAllHolidays()" class="btn-freeze" style="margin-top: 15px;">Tắt/Bật Nghỉ Cả Tuần</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel busy-settings">
+            <h2>⛔ Lịch Bận Cá Nhân & Nghỉ Dài Hạn (Về quê)</h2>
+            <div style="overflow-x: auto;">
+                <table class="matrix-table">
+                    <thead>
+                        <tr>
+                            <th>Tên</th>
+                            <th class="leave-th">Nghỉ Dài Hạn</th>
+                            <th>Thứ 2</th><th>Thứ 3</th><th>Thứ 4</th><th>Thứ 5</th><th>Thứ 6</th><th>Thứ 7</th><th>Chủ Nhật</th>
+                        </tr>
+                    </thead>
+                    <tbody id="busy-matrix-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel" id="schedule-panel">
+            <h2>Lịch Tuần Mới</h2>
+            <button onclick="generateSchedule()">🎲 Tự Động Xếp Lịch Mới</button>
+            <button onclick="toggleEditMode()" class="btn-edit" id="btn-edit-mode">✏️ Bật Sửa Thủ Công</button>
+            <button onclick="chotTuan()" class="btn-success">✅ Chốt Tuần (Lưu & Trừ Nợ)</button>
+            <button onclick="toggleHistory()" class="btn-history">🕒 Lịch Sử Các Tuần</button>
+            <button onclick="resetData()" class="btn-danger" style="float: right;">Xóa Trắng Lịch Này</button>
+
+            <div class="section-toggle-bar">
+                <button onclick="copyScheduleText()" class="btn-history">📋 Copy Lịch (Text)</button>
+                <button onclick="exportScheduleImage()" class="btn-history">🖼️ Xuất Ảnh PNG</button>
+                <button onclick="window.print()" class="btn-history">🖨️ In / Lưu PDF</button>
+            </div>
+            
+            <p class="note" style="margin-top: 15px;">* Chú ý: Bất kỳ ca nợ nào được xếp vào bảng dưới đây sẽ tự động được xóa khỏi danh sách nợ (Đồng bộ Real-Time).</p>
+            
+            <div id="history-section">
+                <h3 style="color: #6c757d;">🕒 Lịch Sử Các Tuần (Chỉ Xem)</h3>
+                <div style="margin-bottom: 10px;">
+                    <label for="history-week-select" style="font-weight:bold; margin-right: 6px;">Xem tuần:</label>
+                    <select id="history-week-select" class="history-select" onchange="renderHistoryTable()"></select>
+                </div>
+                <div class="table-scroll">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Ngày</th><th>Sân + Đổ rác</th><th>Tầng trệt + NVS</th><th>Phòng học</th><th>Sân thượng</th><th>Tủ lạnh</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body"></tbody>
+                </table>
+                </div>
+            </div>
+
+            <div class="live-stats-bar" id="live-stats-bar">
+                <strong style="color: #7b1fa2;">📊 Thống kê số ca đang xếp trên bảng:</strong>
+                <div id="live-stats-content" style="margin-top: 5px;"></div>
+            </div>
+
+            <div id="schedule-capture">
+                <h3 style="margin: 10px 0 0;">📅 <span id="capture-title">Lịch tuần này</span></h3>
+                <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ngày</th><th>Sân + Đổ rác</th><th class="bg-tret-nvs">Tầng trệt + NVS</th><th>Phòng học</th><th>Sân thượng</th><th class="bg-fridge">Tủ lạnh</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedule-table-body"></tbody>
+                </table>
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px; background: #e8f0fe; padding: 15px; border-radius: 5px;">
+                <h3 style="margin-top: 0;">🏖️ Ghi chú thuật toán: <span id="off-list" style="color: #1a73e8;">Chưa có dữ liệu...</span></h3>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>🛠️ Quản Trị Dữ Liệu Tự Động (Backup & Restore)</h2>
+            <button onclick="toggleDebug()" class="btn-warning">Mở Bảng Quản Trị / Khôi Phục JSON</button>
+            <div id="debug-section">
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <button onclick="exportDataToFile()" class="btn-success">💾 Tải Dữ Liệu Về Máy (.json)</button>
+                    <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importDataFromFile(event)">
+                    <button onclick="document.getElementById('import-file').click()" class="btn-warning">📂 Tải File Lên Hệ Thống</button>
+                </div>
+                <textarea id="debug-json"></textarea>
+                <br>
+                <button onclick="applyDebug()" class="btn-history" style="margin-top: 10px;">Lưu Dữ Liệu Ô Text</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="penaltyModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closePenaltyModal()">&times;</span>
+            <h2 style="color: #dc3545; margin-top: 0;">⚖️ Hồ Sơ Kỷ Luật - <span id="penalty-member-name"></span></h2>
+            
+            <h3>Danh sách Nợ/Phạt đang chờ:</h3>
+            <div class="penalty-list" id="penalty-list-container"></div>
+
+            <div class="penalty-form">
+                <h3 style="margin-top: 0;">➕ Tuyên Án Phạt Mới</h3>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <select id="pen-task">
+                        <option value="san">Sân + Đổ rác</option>
+                        <option value="tret">Tầng trệt + NVS</option>
+                        <option value="phong">Phòng học</option>
+                        <option value="thuong">Sân thượng</option>
+                        <option value="fridge">Tủ lạnh</option>
+                    </select>
+                    <select id="pen-day">
+                        <option value="Thứ 2">Thứ 2</option><option value="Thứ 3">Thứ 3</option>
+                        <option value="Thứ 4">Thứ 4</option><option value="Thứ 5">Thứ 5</option>
+                        <option value="Thứ 6">Thứ 6</option><option value="Thứ 7">Thứ 7</option>
+                        <option value="Chủ Nhật">Chủ Nhật</option>
+                    </select>
+                    <button onclick="addManualPenalty()" class="btn-success">Ghi Sổ Phạt</button>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #ccc;">
+                <p style="margin: 5px 0; font-weight: bold; color: #dc3545;">Án Điểm Mẫu:</p>
+                <button onclick="addWeekPenalty()" class="btn-danger">Phạt trực Sân CẢ TUẦN (7 ngày)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="fab-container">
+        <button onclick="window.scrollTo({top:0, behavior:'smooth'})" class="fab-btn btn-history" title="Lên đầu trang">⬆️</button>
+        <button onclick="document.getElementById('schedule-panel').scrollIntoView({behavior:'smooth'})" class="fab-btn" title="Đến Lịch Tuần">📅</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script>
+        const defaultNames = ["Khoa","Thy","Triết","Hân","Khang","Trang","H.Nguyên","Ngân","Ánh","Thuận","Bình","Vy"];
+        const taskKeys = ["san", "tret", "phong", "thuong", "fridge"];
+        const taskNamesMap = {san: 'Sân', tret: 'Trệt+NVS', phong: 'Phòng', thuong: 'Thượng', fridge: 'Tủ lạnh'};
+        const days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ Nhật"];
+
+        // V24: Chuẩn hoá việc bóc tách tên gốc khỏi các tiền tố trạng thái (⚠️ ép buộc / ⚖️ lệch ca)
+        const STATUS_PREFIXES = ["⚠️ ", "⚖️ "];
+        function stripStatusPrefix(name) {
+            if (!name) return name;
+            for (const p of STATUS_PREFIXES) { if (name.startsWith(p)) return name.slice(p.length); }
+            return name;
+        }
+        function getStatusPrefix(name) {
+            if (!name) return "";
+            for (const p of STATUS_PREFIXES) { if (name.startsWith(p)) return p; }
+            return "";
+        }
+        
+        let members = JSON.parse(localStorage.getItem('cuxa_members_v22')) 
+                   || JSON.parse(localStorage.getItem('cuxa_members_v21'))
+                   || JSON.parse(localStorage.getItem('cuxa_members_v20'));
+                   
+        if (!members) {
+            members = defaultNames.map(name => ({
+                name: name, debts: [], offCycle: false, extraCycle: false, fridgeCycle: false, nvsCycle: false, busyDays: [], isLongLeave: false, stats: {done: 0, missed: 0}
+            }));
+        }
+
+        members.forEach(m => {
+            if (m.extraCycle === undefined) m.extraCycle = false;
+            if (m.busyDays === undefined) m.busyDays = [];
+            if (m.isLongLeave === undefined) m.isLongLeave = false;
+            if (m.stats === undefined) m.stats = {done: 0, missed: 0};
+            m.debts.forEach(d => { if (d.frozen === undefined) d.frozen = false; });
+        });
+
+        const defaultSlotsConfig = {
+            'san': days, 'tret': ['Thứ 3', 'Thứ 6', 'Chủ Nhật'], 'phong': ['Thứ 4', 'Thứ 7'], 'thuong': ['Thứ 2', 'Thứ 5'], 'fridge': ['Thứ 4']
+        };
+        let slotsConfig = JSON.parse(localStorage.getItem('cuxa_config_v22')) || JSON.parse(localStorage.getItem('cuxa_config_v21')) || defaultSlotsConfig;
+        let holidays = JSON.parse(localStorage.getItem('cuxa_holidays_v22')) || JSON.parse(localStorage.getItem('cuxa_holidays_v21')) || []; 
+        let currentSchedule = JSON.parse(localStorage.getItem('cuxa_schedule_v22')) || JSON.parse(localStorage.getItem('cuxa_schedule_v21')) || {};
+        let currentOff = JSON.parse(localStorage.getItem('cuxa_off_v22')) || JSON.parse(localStorage.getItem('cuxa_off_v21')) || [];
+        let historySchedule = JSON.parse(localStorage.getItem('cuxa_history_v22')) || JSON.parse(localStorage.getItem('cuxa_history_v21')) || {};
+        let weekModeText = localStorage.getItem('cuxa_mode_v22') || localStorage.getItem('cuxa_mode_v21') || "Chưa có dữ liệu";
+
+        // V23: Lưu trữ nhiều tuần lịch sử (thay vì chỉ 1 tuần trước)
+        let historyArchive = JSON.parse(localStorage.getItem('cuxa_archive_v23')) || [];
+        const MAX_ARCHIVE_WEEKS = 20;
+        // Chuyển dữ liệu lịch sử cũ (chỉ 1 tuần) vào kho lưu trữ mới nếu chưa có gì
+        if (historyArchive.length === 0 && historySchedule && Object.keys(historySchedule).length > 0) {
+            historyArchive.push({ date: "Tuần trước (dữ liệu cũ)", schedule: historySchedule });
+        }
+        
+        let isEditMode = false;
+        let currentPenaltyMember = null;
+        let showScoreColumn = false;
+
+        function saveData() {
+            localStorage.setItem('cuxa_members_v22', JSON.stringify(members));
+            localStorage.setItem('cuxa_schedule_v22', JSON.stringify(currentSchedule));
+            localStorage.setItem('cuxa_off_v22', JSON.stringify(currentOff));
+            localStorage.setItem('cuxa_history_v22', JSON.stringify(historySchedule));
+            localStorage.setItem('cuxa_mode_v22', weekModeText);
+            localStorage.setItem('cuxa_config_v22', JSON.stringify(slotsConfig));
+            localStorage.setItem('cuxa_holidays_v22', JSON.stringify(holidays));
+            localStorage.setItem('cuxa_archive_v23', JSON.stringify(historyArchive));
+            renderUI();
+        }
+
+        function toggleScoreColumn() { showScoreColumn = !showScoreColumn; renderUI(); }
+
+        function addMember() {
+            let input = document.getElementById('new-member-name');
+            let name = input.value.trim();
+            if (!name) return alert("Vui lòng nhập tên!");
+            if (members.length >= 25) return alert("Hỗ trợ tối đa 25 người!");
+            if (members.find(m => m.name.toLowerCase() === name.toLowerCase())) return alert("Tên này đã tồn tại!");
+            members.push({ name: name, debts: [], offCycle: false, extraCycle: false, fridgeCycle: false, nvsCycle: false, busyDays: [], isLongLeave: false, stats: {done: 0, missed: 0} });
+            input.value = ''; saveData();
+        }
+
+        function removeMember(name) {
+            if (confirm(`⚠️ Chắc chắn XÓA [${name}]? Dữ liệu của người này sẽ mất.`)) {
+                members = members.filter(m => m.name !== name); saveData();
+            }
+        }
+
+        // V23: Đổi tên thành viên mà vẫn giữ nguyên nợ/điểm/lịch sử đã có
+        function renameMember(oldName) {
+            let newName = prompt(`Đổi tên "${oldName}" thành:`, oldName);
+            if (newName === null) return;
+            newName = newName.trim();
+            if (!newName || newName === oldName) return;
+            if (members.some(m => m.name.toLowerCase() === newName.toLowerCase())) return alert("Tên này đã tồn tại!");
+
+            let m = members.find(x => x.name === oldName);
+            if (!m) return;
+            m.name = newName;
+
+            const swapName = (cell) => {
+                if (!cell || !cell.name) return;
+                let raw = stripStatusPrefix(cell.name);
+                if (raw === oldName) cell.name = getStatusPrefix(cell.name) + newName;
+            };
+            days.forEach(day => {
+                if (currentSchedule[day]) taskKeys.forEach(task => swapName(currentSchedule[day][task]));
+            });
+            historyArchive.forEach(entry => {
+                days.forEach(day => {
+                    if (entry.schedule[day]) taskKeys.forEach(task => swapName(entry.schedule[day][task]));
+                });
+            });
+            saveData();
+        }
+
+        function toggleConfigSlot(task, day) {
+            if(!slotsConfig[task]) slotsConfig[task] = [];
+            if(slotsConfig[task].includes(day)) slotsConfig[task] = slotsConfig[task].filter(d => d !== day);
+            else slotsConfig[task].push(day);
+            saveData();
+        }
+
+        function toggleHoliday(day) {
+            if(holidays.includes(day)) holidays = holidays.filter(d => d !== day);
+            else holidays.push(day);
+            saveData();
+        }
+
+        function toggleAllHolidays() {
+            if(holidays.length === 7) holidays = []; else holidays = [...days]; 
+            saveData();
+        }
+
+        function toggleBusy(name, day) {
+            let m = members.find(x => x.name === name);
+            if (!m || m.isLongLeave) return; 
+            if (!m.busyDays) m.busyDays = [];
+            if (m.busyDays.includes(day)) m.busyDays = m.busyDays.filter(d => d !== day);
+            else m.busyDays.push(day);
+            saveData();
+        }
+
+        function toggleLongLeave(name) {
+            let m = members.find(x => x.name === name);
+            if (!m) return;
+            m.isLongLeave = !m.isLongLeave;
+            if(m.isLongLeave) m.busyDays = []; 
+            saveData();
+        }
+
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            let btn = document.getElementById('btn-edit-mode');
+            let statsBar = document.getElementById('live-stats-bar');
+            if(isEditMode) {
+                btn.innerText = "💾 Lưu Chỉnh Sửa"; btn.classList.replace('btn-edit', 'btn-success');
+                statsBar.style.display = 'block';
+                updateLiveStats();
+            } else {
+                btn.innerText = "✏️ Bật Sửa Thủ Công"; btn.classList.replace('btn-success', 'btn-edit');
+                statsBar.style.display = 'none';
+            }
+            renderUI();
+        }
+
+        // Đếm tổng số ca trực của 1 người trên bảng hiện tại
+        function getShiftCount(name) {
+            let count = 0;
+            days.forEach(d => {
+                if(currentSchedule[d]) {
+                    taskKeys.forEach(t => {
+                        if(currentSchedule[d][t] && stripStatusPrefix(currentSchedule[d][t].name) === name) count++;
+                    });
+                }
+            });
+            return count;
+        }
+
+        function updateLiveStats() {
+            if(!isEditMode) return;
+            let counts = {};
+            members.forEach(m => counts[m.name] = getShiftCount(m.name));
+            
+            let html = '';
+            members.filter(m => !m.isLongLeave).forEach(m => {
+                let color = counts[m.name] === 0 ? '#ffcdd2' : (counts[m.name] > 1 ? '#c8e6c9' : 'white');
+                html += `<div class="live-stat-item" style="background: ${color}">${m.name}: ${counts[m.name]} ca</div>`;
+            });
+            document.getElementById('live-stats-content').innerHTML = html;
+        }
+
+        // 🔥 HÀM ĐỒNG BỘ 2 CHIỀU KHI SỬA THỦ CÔNG
+        function manualChangeCell(day, task, selectElem) {
+            let newName = selectElem.value;
+            let oldCell = currentSchedule[day] ? currentSchedule[day][task] : null;
+
+            // 1. Thu hồi nợ nếu ô cũ đang chứa người trả nợ
+            if (oldCell && oldCell.name !== "---") {
+                let oldRawName = stripStatusPrefix(oldCell.name);
+                if (oldCell.isDebt) {
+                    let mOld = members.find(x => x.name === oldRawName);
+                    // Bơm lại nợ vào danh sách chờ
+                    if (mOld) mOld.debts.push({day: day, task: task, frozen: false});
+                }
+            }
+
+            // 2. Xử lý gán người mới
+            if(newName === "---") {
+                if (currentSchedule[day]) delete currentSchedule[day][task];
+            } else {
+                if(!currentSchedule[day]) currentSchedule[day] = {};
+                let mNew = members.find(x => x.name === newName);
+                let isDebt = false;
+
+                // Tìm xem người này có đang nợ công việc này không (bỏ qua frozen)
+                let debtIdx = mNew.debts.findIndex(d => d.task === task && !d.frozen);
+                if (debtIdx !== -1) {
+                    isDebt = true;
+                    // 🔥 XÓA NỢ TỨC THÌ
+                    mNew.debts.splice(debtIdx, 1);
+                }
+                
+                currentSchedule[day][task] = { name: newName, isDebt: isDebt, status: 'pending' };
+
+                // 🔥 AUTO-TICK GÁNH CA nếu tổng số ca >= 2
+                if (getShiftCount(newName) >= 2) mNew.extraCycle = true;
+            }
+            
+            if(newName !== "---" && members.find(m => m.name === newName).busyDays.includes(day)) {
+                selectElem.classList.add('busy-warn');
+            } else {
+                selectElem.classList.remove('busy-warn');
+            }
+            
+            localStorage.setItem('cuxa_schedule_v22', JSON.stringify(currentSchedule));
+            saveData(); // Gọi renderUI() để thẻ (Nợ) hoặc Gánh Ca tự động biến mất/xuất hiện ngay lập tức
+            updateLiveStats();
+        }
+
+        // --- RENDER GIAO DIỆN CHÍNH ---
+        function renderUI() {
+            document.getElementById('member-count').innerText = members.length;
+            
+            // 1. LEADERBOARD
+            let lbBody = document.getElementById('leaderboard-body');
+            let sortedMembers = [...members].sort((a, b) => {
+                let scoreA = (a.stats.done * 10) - (a.stats.missed * 20);
+                let scoreB = (b.stats.done * 10) - (b.stats.missed * 20);
+                return scoreB - scoreA;
+            });
+            let lbHtml = '';
+            sortedMembers.forEach((m, idx) => {
+                let score = (m.stats.done * 10) - (m.stats.missed * 20);
+                let medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `#${idx+1}`));
+                let scoreColor = score < 0 ? 'color: red; font-weight: bold;' : 'font-weight: bold;';
+                let scoreDisplay = showScoreColumn ? 'table-cell' : 'none';
+                
+                lbHtml += `<tr>
+                    <td><span class="medal-icon">${medal}</span></td>
+                    <td><b>${m.name}</b></td>
+                    <td style="color: green; font-weight: bold;">${m.stats.done}</td>
+                    <td style="color: #d32f2f; font-weight: bold;">${m.stats.missed}</td>
+                    <td style="color: #f57f17; font-weight: bold;">${m.debts.length}</td>
+                    <td class="score-col" style="${scoreColor} display: ${scoreDisplay};">${score}</td>
+                </tr>`;
+            });
+            lbBody.innerHTML = lbHtml;
+
+            let scoreCols = document.getElementsByClassName('score-col');
+            for(let i=0; i<scoreCols.length; i++) {
+                scoreCols[i].style.display = showScoreColumn ? 'table-cell' : 'none';
+            }
+            document.getElementById('score-formula-text').style.display = showScoreColumn ? 'block' : 'none';
+
+            // 2. MEMBER TABLE
+            const tbody = document.getElementById('member-table-body');
+            tbody.innerHTML = '';
+            members.forEach(m => {
+                let nameHtml = m.name;
+                if(m.isLongLeave) nameHtml += ' <span class="long-leave-badge">VẮNG</span>';
+                let activeDebts = m.debts.filter(d => !d.frozen).length;
+                if (activeDebts === 1 && !m.isLongLeave) nameHtml += ' <span class="missed">*</span>';
+                if (activeDebts >= 2 && !m.isLongLeave) nameHtml += ' <span class="double-missed">**</span>';
+
+                let debtDisplay = '0';
+                if (m.debts.length > 0) {
+                    let debtStrs = m.debts.map(d => d.frozen ? `<span class="frozen">${d.day} (${taskNamesMap[d.task]}) ❄️</span>` : `${d.day} (${taskNamesMap[d.task]})`);
+                    debtDisplay = `<b>${activeDebts}</b> <br><small style="color:red">${debtStrs.join('<br>')}</small>`;
+                }
+                
+                let offDisplay = m.offCycle ? '✔️' : '-';
+                if (activeDebts >= 2) offDisplay = '<span class="tuoc-luot">❌ Tước lượt</span>';
+                if (m.isLongLeave) offDisplay = '<span style="color:#9e9e9e;">Vắng</span>';
+
+                tbody.innerHTML += `
+                    <tr style="${m.isLongLeave ? 'opacity: 0.6; background: #f5f5f5;' : ''}">
+                        <td><b>${nameHtml}</b></td>
+                        <td>${debtDisplay}</td>
+                        <td>${offDisplay}</td>
+                        <td style="background-color: #fff8e1;">${m.extraCycle ? '✔️' : '-'}</td>
+                        <td>${m.fridgeCycle ? '✔️' : '-'}</td>
+                        <td>${m.nvsCycle ? '✔️' : '-'}</td>
+                        <td>
+                            <button onclick="renameMember('${m.name}')" class="btn-edit" style="margin:0; padding: 5px 10px;">✏️ Đổi tên</button>
+                            <button onclick="openPenaltyModal('${m.name}')" class="btn-warning" style="margin:0; padding: 5px 10px;">⚖️ Án Phạt</button>
+                            <button onclick="removeMember('${m.name}')" class="btn-danger" style="margin:0; padding: 5px 10px;">Xóa</button>
+                        </td>
+                    </tr>`;
+            });
+
+            // Config & Holiday
+            const configBody = document.getElementById('config-matrix-body');
+            configBody.innerHTML = '';
+            taskKeys.forEach(task => {
+                let tr = `<tr><td>${taskNamesMap[task]}</td>`;
+                days.forEach(day => {
+                    let isChecked = (slotsConfig[task] && slotsConfig[task].includes(day)) ? 'checked' : '';
+                    tr += `<td><input type="checkbox" onchange="toggleConfigSlot('${task}', '${day}')" ${isChecked}></td>`;
+                });
+                tr += `</tr>`;
+                configBody.innerHTML += tr;
+            });
+            const holContainer = document.getElementById('holiday-checkboxes-container');
+            holContainer.innerHTML = '';
+            days.forEach(day => {
+                let isChecked = holidays.includes(day) ? 'checked' : '';
+                holContainer.innerHTML += `<label><input type="checkbox" value="${day}" onchange="toggleHoliday('${day}')" ${isChecked}> ${day}</label>`;
+            });
+
+            // Busy Matrix
+            const matrixBody = document.getElementById('busy-matrix-body');
+            matrixBody.innerHTML = '';
+            members.forEach(m => {
+                let tr = `<tr style="${m.isLongLeave ? 'background-color: #ffebee;' : ''}"><td>${m.name}</td>`;
+                tr += `<td style="background-color: #ffcdd2;"><input type="checkbox" onchange="toggleLongLeave('${m.name}')" ${m.isLongLeave ? 'checked' : ''}></td>`;
+                let disabledAttr = m.isLongLeave ? 'disabled class="disabled-checkbox"' : '';
+                days.forEach(day => {
+                    let isChecked = (m.busyDays && m.busyDays.includes(day)) ? 'checked' : '';
+                    tr += `<td><input type="checkbox" onchange="toggleBusy('${m.name}', '${day}')" ${isChecked} ${disabledAttr}></td>`;
+                });
+                tr += `</tr>`;
+                matrixBody.innerHTML += tr;
+            });
+
+            // 3. SCHEDULE TABLE 
+            const schBody = document.getElementById('schedule-table-body');
+            schBody.innerHTML = '';
+            if (Object.keys(currentSchedule).length === 0 && !isEditMode) {
+                schBody.innerHTML = '<tr><td colspan="6">Chưa có lịch. Hãy bấm "Tự Động Xếp Lịch".</td></tr>';
+            } else {
+                days.forEach(day => {
+                    let row = `<tr><td><b>${day}</b></td>`;
+                    if(holidays.includes(day) && !isEditMode) { 
+                        row += `<td colspan="5" style="background-color: #e0f7fa; color: #00838f; font-weight: bold;">🌴 NGHỈ </td></tr>`;
+                        schBody.innerHTML += row; return; 
+                    }
+                    
+                    taskKeys.forEach(task => {
+                        let isSlotActive = slotsConfig[task] && slotsConfig[task].includes(day);
+                        let cellData = currentSchedule[day] ? currentSchedule[day][task] : null;
+
+                        if (isEditMode) {
+                            let isBusy = cellData && members.find(m => m.name === stripStatusPrefix(cellData.name))?.busyDays.includes(day);
+                            let warnClass = isBusy ? 'busy-warn' : '';
+                            let bgColor = !isSlotActive ? 'background-color: #fffde7;' : ''; 
+                            
+                            let selectHtml = `<select class="manual-select ${warnClass}" onchange="manualChangeCell('${day}', '${task}', this)">`;
+                            selectHtml += `<option value="---">-- Trống --</option>`;
+                            members.forEach(m => {
+                                let rawCellName = cellData ? stripStatusPrefix(cellData.name) : "";
+                                if(m.isLongLeave && rawCellName !== m.name) return;
+                                let selected = (rawCellName === m.name) ? 'selected' : '';
+                                let label = m.name;
+                                if(m.busyDays.includes(day)) label += " (Bận)";
+                                // Chỉ hiện "Nợ" nếu họ nợ việc này và nợ đó chưa bị đóng băng
+                                if(m.debts.some(d => d.task === task && !d.frozen)) label += " (Nợ)";
+                                selectHtml += `<option value="${m.name}" ${selected}>${label}</option>`;
+                            });
+                            selectHtml += `</select>`;
+                            
+                            if (cellData && cellData.name.includes("⚠️")) {
+                                row += `<td style="${bgColor}">${selectHtml}<br><small style="color:red">⚠️ Ép buộc (người đang bận)</small></td>`;
+                            } else if (cellData && cellData.name.includes("⚖️")) {
+                                row += `<td style="${bgColor}">${selectHtml}<br><small style="color:#e65100">⚖️ Lệch ca (không đủ người)</small></td>`;
+                            } else {
+                                row += `<td style="${bgColor}">${selectHtml}</td>`;
+                            }
+                        } else {
+                            if (cellData) {
+                                let statusClass = cellData.status === 'done' ? 'status-done' : (cellData.status === 'missed' ? 'status-missed' : '');
+                                let display = cellData.name + (cellData.isDebt ? '<span class="missed"> (Bù/Phạt)</span>' : '');
+                                row += `<td class="checkbox-cell ${statusClass}" onclick="toggleStatus('${day}', '${task}')">${display}</td>`;
+                            } else {
+                                row += `<td class="empty-cell"></td>`;
+                            }
+                        }
+                    });
+                    row += `</tr>`;
+                    schBody.innerHTML += row;
+                });
+            }
+
+            // History (nhiều tuần)
+            renderHistorySelect();
+            renderHistoryTable();
+
+            document.getElementById('capture-title').innerText = "Lịch tuần này - " + new Date().toLocaleDateString('vi-VN');
+            document.getElementById('off-list').innerHTML = weekModeText;
+            document.getElementById('debug-json').value = JSON.stringify(members, null, 4);
+        }
+
+        // Đổ danh sách các tuần đã lưu vào dropdown chọn tuần
+        function renderHistorySelect() {
+            const sel = document.getElementById('history-week-select');
+            let prevValue = sel.value;
+            sel.innerHTML = '';
+            if (historyArchive.length === 0) {
+                sel.innerHTML = '<option value="-1">Chưa có dữ liệu</option>';
+                return;
+            }
+            historyArchive.forEach((entry, idx) => {
+                let label = idx === 0 ? `🆕 Gần nhất - ${entry.date}` : entry.date;
+                sel.innerHTML += `<option value="${idx}">${label}</option>`;
+            });
+            // Giữ lựa chọn cũ nếu còn hợp lệ, không thì mặc định tuần gần nhất
+            if (prevValue && Number(prevValue) < historyArchive.length) sel.value = prevValue;
+            else sel.value = "0";
+        }
+
+        // Vẽ bảng lịch sử theo tuần đang được chọn trong dropdown
+        function renderHistoryTable() {
+            const histBody = document.getElementById('history-table-body');
+            histBody.innerHTML = '';
+            const sel = document.getElementById('history-week-select');
+            let idx = Number(sel.value);
+            if (historyArchive.length === 0 || idx < 0 || !historyArchive[idx]) {
+                histBody.innerHTML = '<tr><td colspan="6">Chưa có dữ liệu.</td></tr>';
+                return;
+            }
+            let schedule = historyArchive[idx].schedule;
+            days.forEach(day => {
+                let row = `<tr><td><b>${day}</b></td>`;
+                taskKeys.forEach(task => {
+                    let cellData = schedule[day] ? schedule[day][task] : null;
+                    if (cellData && cellData.holiday) { row += `<td class="empty-cell" style="color: #00838f;">Nghỉ Lễ</td>`; } 
+                    else if (cellData) {
+                        let statusClass = cellData.status === 'done' ? 'status-done' : (cellData.status === 'missed' ? 'status-missed' : '');
+                        let display = cellData.name + (cellData.isDebt ? '<span class="missed"> (Bù/Phạt)</span>' : '');
+                        row += `<td class="${statusClass}">${display}</td>`;
+                    } else { row += `<td class="empty-cell"></td>`; }
+                });
+                row += `</tr>`;
+                histBody.innerHTML += row;
+            });
+        }
+
+        // --- CÁC HÀM TIỆN ÍCH ---
+        function toggleLeaderboard() { let s = document.getElementById('lb-content'); s.style.display = (s.style.display === 'none') ? 'block' : 'none'; }
+        function toggleStatus(day, task) {
+            if(isEditMode || holidays.includes(day)) return; 
+            if(!currentSchedule[day] || !currentSchedule[day][task]) return; 
+            let current = currentSchedule[day][task].status;
+            if (current === 'pending') currentSchedule[day][task].status = 'done';
+            else if (current === 'done') currentSchedule[day][task].status = 'missed';
+            else currentSchedule[day][task].status = 'pending';
+            saveData();
+        }
+        function toggleHistory() { let s = document.getElementById('history-section'); s.style.display = (s.style.display === 'none' || s.style.display === '') ? 'block' : 'none'; }
+        function toggleConfig() { let s = document.getElementById('config-section'); s.style.display = (s.style.display === 'none' || s.style.display === '') ? 'block' : 'none'; }
+        function toggleDebug() { let s = document.getElementById('debug-section'); s.style.display = (s.style.display === 'none' || s.style.display === '') ? 'block' : 'none'; }
+
+        function applyDebug() {
+            try {
+                members = JSON.parse(document.getElementById('debug-json').value);
+                members.forEach(m => {
+                    if (m.extraCycle === undefined) m.extraCycle = false;
+                    if (m.busyDays === undefined) m.busyDays = [];
+                    if (m.isLongLeave === undefined) m.isLongLeave = false;
+                    if (m.stats === undefined) m.stats = {done: 0, missed: 0};
+                    m.debts.forEach(d => { if (d.frozen === undefined) d.frozen = false; });
+                });
+                saveData(); alert("Đã áp dụng dữ liệu!");
+            } catch (e) { alert("Lỗi cấu trúc JSON!"); }
+        }
+
+        // V23: Copy lịch tuần hiện tại dạng chữ để dán vào Zalo/Messenger
+        function copyScheduleText() {
+            let plainMode = weekModeText.replace(/<[^>]*>/g, '');
+            let lines = [`📅 LỊCH TRỰC TUẦN - ${new Date().toLocaleDateString('vi-VN')}`, plainMode, ''];
+            days.forEach(day => {
+                if (holidays.includes(day)) { lines.push(`${day}: 🌴 Nghỉ`); return; }
+                let dayCell = currentSchedule[day];
+                if (!dayCell || Object.keys(dayCell).length === 0) { lines.push(`${day}: (chưa xếp)`); return; }
+                let parts = taskKeys.filter(t => dayCell[t]).map(t => `${taskNamesMap[t]}: ${stripStatusPrefix(dayCell[t].name)}`);
+                lines.push(`${day}: ${parts.join(' | ')}`);
+            });
+            let text = lines.join('\n');
+
+            function fallbackCopy() {
+                let ta = document.createElement('textarea');
+                ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.focus(); ta.select();
+                try { document.execCommand('copy'); alert('✅ Đã copy lịch, dán vào Zalo/Messenger nhé!'); }
+                catch (e) { alert('❌ Không copy tự động được, vui lòng bôi đen và copy thủ công.'); }
+                document.body.removeChild(ta);
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(
+                    () => alert('✅ Đã copy lịch, dán vào Zalo/Messenger nhé!'),
+                    fallbackCopy
+                );
+            } else fallbackCopy();
+        }
+
+        // V23: Xuất bảng lịch tuần hiện tại thành ảnh PNG để chia sẻ
+        function exportScheduleImage() {
+            if (typeof html2canvas === 'undefined') return alert('⏳ Công cụ xuất ảnh đang tải, vui lòng thử lại sau vài giây (cần có mạng lần đầu tiên)!');
+            let target = document.getElementById('schedule-capture');
+            html2canvas(target, { backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
+                let link = document.createElement('a');
+                link.download = 'LichTruc_' + new Date().toISOString().slice(0, 10) + '.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }).catch(() => alert('❌ Xuất ảnh thất bại, thử dùng nút "In / Lưu PDF" thay thế nhé.'));
+        }
+
+        function exportDataToFile() {
+            let fullData = { members, schedule: currentSchedule, history: historySchedule, archive: historyArchive, off: currentOff, mode: weekModeText, config: slotsConfig, holidays };
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullData, null, 4));
+            let downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "CuXa_Backup_V22.json");
+            document.body.appendChild(downloadAnchorNode); downloadAnchorNode.click(); downloadAnchorNode.remove();
+        }
+
+        function importDataFromFile(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let imported = JSON.parse(e.target.result);
+                    if(imported.members) {
+                        members = imported.members;
+                        currentSchedule = imported.schedule || {}; historySchedule = imported.history || {};
+                        historyArchive = imported.archive || (historySchedule && Object.keys(historySchedule).length ? [{ date: "Khôi phục từ file", schedule: historySchedule }] : []);
+                        currentOff = imported.off || []; weekModeText = imported.mode || "Đã tải từ file";
+                        slotsConfig = imported.config || defaultSlotsConfig; holidays = imported.holidays || [];
+                        saveData(); alert("✅ Phục hồi thành công!");
+                    }
+                } catch(err) { alert("❌ Lỗi file!"); }
+            };
+            reader.readAsText(file);
+        }
+
+        function shuffleArray(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Modal Án Phạt Logic
+        function openPenaltyModal(name) { currentPenaltyMember = name; document.getElementById('penalty-member-name').innerText = name; renderPenaltyList(); document.getElementById('penaltyModal').style.display = 'block'; }
+        function closePenaltyModal() { document.getElementById('penaltyModal').style.display = 'none'; currentPenaltyMember = null; }
+        function renderPenaltyList() {
+            let m = members.find(x => x.name === currentPenaltyMember);
+            let container = document.getElementById('penalty-list-container');
+            if(m.debts.length === 0) { container.innerHTML = '<p style="color: #666; font-style: italic;">Đang trong sạch, không có nợ.</p>'; return; }
+            let html = '';
+            m.debts.forEach((d, idx) => {
+                let btnAction = d.frozen ? `<button class="btn-success" onclick="toggleDebtFreeze(${idx})">Bắt Trả</button>` : `<button class="btn-freeze" onclick="toggleDebtFreeze(${idx})">Khất Nợ</button>`;
+                html += `<div class="penalty-item"><div><b>${d.day}</b> - ${taskNamesMap[d.task]} ${d.frozen?'❄️':''}</div><div>${btnAction} <button class="btn-danger" onclick="deleteDebt(${idx})">Xóa</button></div></div>`;
+            });
+            container.innerHTML = html;
+        }
+        function toggleDebtFreeze(idx) { let m = members.find(x => x.name === currentPenaltyMember); m.debts[idx].frozen = !m.debts[idx].frozen; saveData(); renderPenaltyList(); }
+        function deleteDebt(idx) { let m = members.find(x => x.name === currentPenaltyMember); m.debts.splice(idx, 1); saveData(); renderPenaltyList(); }
+        function addManualPenalty() {
+            let m = members.find(x => x.name === currentPenaltyMember);
+            m.debts.push({ day: document.getElementById('pen-day').value, task: document.getElementById('pen-task').value, frozen: false });
+            saveData(); renderPenaltyList();
+        }
+        function addWeekPenalty() {
+            let m = members.find(x => x.name === currentPenaltyMember);
+            days.forEach(d => m.debts.push({ day: d, task: 'san', frozen: false }));
+            saveData(); renderPenaltyList(); alert(`Đã phạt ${m.name} trực sân 7 ngày!`);
+        }
+        window.onclick = function(event) { let modal = document.getElementById('penaltyModal'); if (event.target == modal) closePenaltyModal(); }
+
+
+        // --- THUẬT TOÁN XẾP LỊCH (ĐỒNG BỘ NỢ TỨC THÌ) ---
+        function autoResetCycles(activeMembers) {
+            let extraCheck = activeMembers.filter(m => !m.extraCycle);
+            if(extraCheck.length === 0 && activeMembers.length > 0) {
+                activeMembers.forEach(m => m.extraCycle = false);
+            }
+            let offCheck = activeMembers.filter(m => !m.offCycle);
+            if(offCheck.length === 0 && activeMembers.length > 0) {
+                activeMembers.forEach(m => m.offCycle = false);
+            }
+        }
+
+        function tryGenerate(allowCycleBreak, allowBalanceBreak, allowBusyBreak) {
+            let tempMembers = JSON.parse(JSON.stringify(members)); 
+            let tempSchedule = {}; days.forEach(d => tempSchedule[d] = {}); let tempOff = [];
+            
+            let availableSlots = [];
+            taskKeys.forEach(task => {
+                if(slotsConfig[task]) {
+                    slotsConfig[task].forEach(day => { if (!holidays.includes(day)) availableSlots.push({day: day, task: task}); });
+                }
+            });
+
+            let activeMembers = tempMembers.filter(m => !m.isLongLeave);
+            if (availableSlots.length === 0) return { tempSchedule, tempMembers, localModeText: "🌴 Tuần này cư xá nghỉ xả hơi trọn tuần!", tempOff };
+
+            // 🔥 Xóa nợ tức thì cho thuật toán Auto
+            // V24: Xử lý theo thứ tự NGẪU NHIÊN (tránh thiên vị người được thêm vào danh sách sớm luôn được ưu tiên
+            // mỗi khi nhiều người cùng nợ 1 slot), và chặn xếp trùng 2 việc cùng ngày cho 1 người khi trả nợ.
+            let debtProcessOrder = shuffleArray(activeMembers);
+            debtProcessOrder.forEach(m => {
+                for(let i = m.debts.length - 1; i >= 0; i--) {
+                    let debt = m.debts[i];
+                    if (debt.frozen || holidays.includes(debt.day)) continue; 
+
+                    const noCollisionThatDay = (day) => !Object.values(tempSchedule[day] || {}).some(t => t.name === m.name);
+                    
+                    let slotIdx = noCollisionThatDay(debt.day) ? availableSlots.findIndex(s => s.day === debt.day && s.task === debt.task) : -1;
+                    if (slotIdx !== -1) {
+                        let slot = availableSlots.splice(slotIdx, 1)[0];
+                        tempSchedule[slot.day][slot.task] = { name: m.name, isDebt: true, status: 'pending' };
+                        m.debts.splice(i, 1); // Trừ nợ luôn
+                    } else {
+                        // Ưu tiên slot khác ngày, đúng loại việc, và người này chưa có ca hôm đó
+                        let altIdx = availableSlots.findIndex(s => s.task === debt.task && noCollisionThatDay(s.day));
+                        if (altIdx === -1) {
+                            // Không có slot đúng việc trống -> bốc đại 1 slot bất kỳ mà người này CHƯA có ca hôm đó
+                            let candidates = availableSlots.filter(s => noCollisionThatDay(s.day));
+                            if (candidates.length > 0) altIdx = availableSlots.indexOf(candidates[Math.floor(Math.random() * candidates.length)]);
+                        }
+                        if (altIdx !== -1 && altIdx !== undefined && availableSlots.length > 0) {
+                            let altSlot = availableSlots.splice(altIdx, 1)[0];
+                            tempSchedule[altSlot.day][altSlot.task] = { name: m.name, isDebt: true, status: 'pending' };
+                            m.debts.splice(i, 1); // Trừ nợ luôn
+                        }
+                        // Nếu vẫn không tìm được slot hợp lệ (mọi ngày đều đã có ca) -> để nợ lại xử lý tuần sau, KHÔNG xếp trùng ngày.
+                    }
+                }
+            });
+
+            let normalSlotsLeft = availableSlots.length; let M = activeMembers.length;
+            if(M === 0) return { tempSchedule, tempMembers, localModeText: "Tất cả mọi người đều đang vắng!", tempOff: [] };
+
+            let baseShifts = Math.floor(normalSlotsLeft / M);
+            let remainder = normalSlotsLeft % M;
+            let targets = {}; activeMembers.forEach(m => targets[m.name] = baseShifts);
+            let localModeText = "";
+
+            if (baseShifts === 0) {
+                let offCount = M - remainder;
+                let activeDebtsCount = m => m.debts.filter(d => !d.frozen).length;
+                let offCandidates = activeMembers.filter(m => activeDebtsCount(m) < 2 && !m.offCycle).map(m => m.name);
+                
+                if (offCandidates.length < offCount) {
+                    activeMembers.forEach(m => { if(activeDebtsCount(m) < 2) m.offCycle = false; });
+                    offCandidates = activeMembers.filter(m => activeDebtsCount(m) < 2).map(m => m.name);
+                }
+                
+                let offPool = shuffleArray(offCandidates).slice(0, offCount);
+                offPool.forEach(name => {
+                    tempMembers.find(m => m.name === name).offCycle = true;
+                    targets[name] = 0; tempOff.push(name);
+                });
+                activeMembers.forEach(m => { if (!offPool.includes(m.name)) targets[m.name] = 1; });
+                localModeText = `Dư người. Danh sách OFF: ${offPool.join(", ")}`;
+            } else {
+                if (remainder > 0) {
+                    let extraCandidates = activeMembers.filter(m => !m.extraCycle).map(m => m.name);
+                    if (extraCandidates.length < remainder) {
+                        activeMembers.forEach(m => m.extraCycle = false);
+                        extraCandidates = activeMembers.map(m => m.name);
+                    }
+                    let extraPool = shuffleArray(extraCandidates).slice(0, remainder);
+                    extraPool.forEach(name => {
+                        tempMembers.find(m => m.name === name).extraCycle = true;
+                        targets[name] += 1;
+                    });
+                    localModeText = `Thiếu người. Gánh ca (+1): ${extraPool.join(", ")}`;
+                } else {
+                    localModeText = `Vừa đủ. Mỗi người trực đúng ${baseShifts} ca.`;
+                }
+            }
+
+            let assignees = [];
+            for (let name in targets) { for (let i = 0; i < targets[name]; i++) assignees.push(name); }
+            let pool = shuffleArray(assignees); 
+            let randomizedSlots = shuffleArray(availableSlots);
+
+            function pickPerson(slot, mustHaveNvsCycle = null, mustHaveFridgeCycle = null) {
+                let idx = pool.findIndex(a => {
+                    let m = activeMembers.find(x => x.name === a);
+                    let noCollision = !Object.values(tempSchedule[slot.day]).some(t => t.name === a);
+                    let notBusy = !(m.busyDays && m.busyDays.includes(slot.day));
+                    let passNvs = mustHaveNvsCycle === false ? !m.nvsCycle : true;
+                    let passFridge = mustHaveFridgeCycle === false ? !m.fridgeCycle : true;
+                    return noCollision && notBusy && passNvs && passFridge;
+                });
+                
+                if (idx === -1 && allowCycleBreak) { 
+                    idx = pool.findIndex(a => {
+                        let m = activeMembers.find(x => x.name === a);
+                        let noCollision = !Object.values(tempSchedule[slot.day]).some(t => t.name === a);
+                        let notBusy = !(m.busyDays && m.busyDays.includes(slot.day));
+                        return noCollision && notBusy;
+                    });
+                }
+
+                // V24: Tầng "lệch ca" - thà có người trực nhiều/ít hơn bình thường, còn hơn ép người đang bận.
+                // (Trước đây allowBalanceBreak được khai báo nhưng chưa từng dùng tới, khiến tầng nới lỏng này
+                // không có tác dụng thật sự và AI nhảy thẳng từ "phá cycle" sang "ép người bận".)
+                if (idx === -1 && allowBalanceBreak) {
+                    let freeIdx = activeMembers.findIndex(m => {
+                        let noCollision = !Object.values(tempSchedule[slot.day]).some(t => t.name === m.name);
+                        let notBusy = !(m.busyDays && m.busyDays.includes(slot.day));
+                        return noCollision && notBusy;
+                    });
+                    if (freeIdx !== -1) {
+                        let pickedName = activeMembers[freeIdx].name;
+                        localModeText += ` <span style='color:#e65100;'><br>⚖️ ${pickedName} phải nhận thêm ca ngoài kế hoạch (không đủ người để chia đều tuyệt đối).</span>`;
+                        return "⚖️ " + pickedName;
+                    }
+                }
+                
+                if (idx === -1 && allowBusyBreak) {
+                    idx = pool.findIndex(a => !Object.values(tempSchedule[slot.day]).some(t => t.name === a));
+                    if(idx !== -1) {
+                        let pickedName = pool[idx];
+                        pool.splice(idx, 1);
+                        localModeText += " <span style='color:red;'><br>⚠️ AI đã phải ép buộc xếp người bận vì hết sự lựa chọn. Vui lòng check bảng!</span>";
+                        return "⚠️ " + pickedName;
+                    }
+                }
+                
+                if (idx === -1) throw new Error("Kẹt logic");
+                return pool.splice(idx, 1)[0];
+            }
+
+            let fSlotIdx = randomizedSlots.findIndex(s => s.task === 'fridge');
+            if (fSlotIdx !== -1) {
+                let fCand = pool.filter(a => !activeMembers.find(m=>m.name===a).fridgeCycle);
+                if (fCand.length === 0) activeMembers.forEach(m => m.fridgeCycle = false);
+                let fSlot = randomizedSlots.splice(fSlotIdx, 1)[0];
+                let fPerson = pickPerson(fSlot, null, false);
+                tempSchedule[fSlot.day][fSlot.task] = { name: fPerson, isDebt: false, status: 'pending' };
+            }
+
+            let tretSlots = randomizedSlots.filter(s => s.task === 'tret');
+            let nvsCandCheck = pool.filter(a => !activeMembers.find(m=>m.name===a).nvsCycle);
+            if(nvsCandCheck.length < tretSlots.length) activeMembers.forEach(m => m.nvsCycle = false);
+            tretSlots.forEach(slot => {
+                let sIdx = randomizedSlots.findIndex(s => s === slot);
+                randomizedSlots.splice(sIdx, 1);
+                let person = pickPerson(slot, false, null);
+                tempSchedule[slot.day][slot.task] = { name: person, isDebt: false, status: 'pending' };
+            });
+
+            randomizedSlots.forEach(slot => {
+                let person = pickPerson(slot, null, null);
+                tempSchedule[slot.day][slot.task] = { name: person, isDebt: false, status: 'pending' };
+            });
+
+            return { tempSchedule, tempMembers, localModeText, tempOff };
+        }
+
+        // V24: Kiểm tra khả thi TRƯỚC khi chạy thuật toán - vì dù nới lỏng cỡ nào, 1 người vẫn không thể
+        // đảm nhận 2 việc cùng ngày, nên nếu 1 ngày nào đó cần nhiều đầu việc hơn số người đang hoạt động,
+        // việc xếp lịch chắc chắn bất khả thi (chạy 2000 lần cũng vô ích).
+        function checkFeasibility(activeMembers) {
+            if (activeMembers.length === 0) return "Tất cả mọi người đều đang Nghỉ Dài Hạn, không còn ai để xếp lịch!";
+            let problems = [];
+            days.forEach(day => {
+                if (holidays.includes(day)) return;
+                let neededTasks = taskKeys.filter(task => slotsConfig[task] && slotsConfig[task].includes(day));
+                if (neededTasks.length > activeMembers.length) {
+                    let names = neededTasks.map(t => taskNamesMap[t]).join(', ');
+                    problems.push(`- ${day}: cần ${neededTasks.length} người (${names}) nhưng chỉ có ${activeMembers.length} người đang hoạt động.`);
+                }
+            });
+            if (problems.length > 0) {
+                return `Không thể xếp lịch vì các ngày sau vượt quá số người hiện có (1 người/ngày chỉ nhận tối đa 1 đầu việc):\n${problems.join('\n')}\n\nHãy giảm bớt đầu việc trong "Cấu Hình Đầu Việc", cho nghỉ lễ ngày đó, hoặc bổ sung thêm thành viên.`;
+            }
+            return null;
+        }
+
+        function generateSchedule() {
+            if (isEditMode) return alert("Vui lòng Lưu Chỉnh Sửa trước khi Xếp tự động!");
+            
+            let activeMembers = members.filter(m => !m.isLongLeave);
+
+            let feasibilityError = checkFeasibility(activeMembers);
+            if (feasibilityError) return alert("⚠️ " + feasibilityError);
+
+            autoResetCycles(activeMembers);
+
+            let success = false;
+            let bestResult = null;
+
+            for(let attempt = 0; attempt < 2000; attempt++) {
+                let allowCycleBreak = attempt > 500;   
+                let allowBalanceBreak = attempt > 1000; 
+                let allowBusyBreak = attempt > 1500;   
+
+                try {
+                    bestResult = tryGenerate(allowCycleBreak, allowBalanceBreak, allowBusyBreak);
+                    success = true; break;
+                } catch (e) {}
+            }
+
+            if(success && bestResult) {
+                currentSchedule = bestResult.tempSchedule;
+                members = bestResult.tempMembers;
+                weekModeText = bestResult.localModeText;
+                currentOff = bestResult.tempOff;
+                saveData();
+            } else {
+                alert("⚠️ Không tìm được cách xếp lịch phù hợp sau 2000 lần thử. Đây là trường hợp hiếm gặp (thường do quá nhiều người cùng bận trùng ngày) - hãy thử giảm bớt lịch bận cá nhân rồi bấm lại.");
+            }
+        }
+
+        function chotTuan() {
+            if (isEditMode) return alert("Vui lòng Lưu Chỉnh Sửa (tắt chế độ sửa thủ công) trước khi Chốt Tuần!");
+            if (Object.keys(currentSchedule).length === 0) return alert("Chưa có lịch tuần này!");
+
+            let pendingCount = 0;
+            days.forEach(day => {
+                if (holidays.includes(day)) return;
+                taskKeys.forEach(task => {
+                    let cell = currentSchedule[day] && currentSchedule[day][task];
+                    if (cell && cell.status === 'pending') pendingCount++;
+                });
+            });
+            let warnMsg = pendingCount > 0 ? `\n\n⚠️ Còn ${pendingCount} ca chưa được chấm Hoàn Thành/Bùng - các ca này sẽ KHÔNG được tính điểm hay trừ/cộng nợ!` : '';
+            if (!confirm("Chốt lịch tuần? Bùng trực bị cộng 1 nợ. Nợ đã được trừ ngay khi lên bảng." + warnMsg)) return;
+
+            days.forEach(day => {
+                if(holidays.includes(day)) {
+                    taskKeys.forEach(task => { if (!currentSchedule[day]) currentSchedule[day] = {}; currentSchedule[day][task] = { holiday: true }; });
+                    return; 
+                }
+
+                for (let task in currentSchedule[day]) {
+                    let cell = currentSchedule[day][task];
+                    let rawName = stripStatusPrefix(cell.name); 
+                    let m = members.find(x => x.name === rawName);
+                    if (!m) continue;
+
+                    if (cell.status === 'missed') {
+                        // V22: Phát sinh nợ mới
+                        m.debts.push({day: day, task: task, frozen: false});
+                        m.stats.missed++;
+                    } else if (cell.status === 'done') {
+                        // V22: Nợ đã trừ sẵn lúc xếp, giờ chỉ ghi nhận cycle
+                        if (task === 'fridge') m.fridgeCycle = true;
+                        if (task === 'tret') m.nvsCycle = true; 
+                        m.stats.done++;
+                    }
+                }
+            });
+
+            members.forEach(m => { m.busyDays = []; });
+            holidays = []; 
+            historySchedule = JSON.parse(JSON.stringify(currentSchedule));
+            historyArchive.unshift({ date: new Date().toLocaleDateString('vi-VN'), schedule: historySchedule });
+            if (historyArchive.length > MAX_ARCHIVE_WEEKS) historyArchive = historyArchive.slice(0, MAX_ARCHIVE_WEEKS);
+            currentSchedule = {}; currentOff = []; weekModeText = "Chưa có dữ liệu";
+            saveData();
+            alert("✅ Chốt tuần thành công! Điểm số đã được cập nhật vào Bảng Phong Thần.");
+        }
+
+        // 🔥 HOÀN TRẢ NỢ KHI XÓA BẢNG LỊCH
+        function resetData() { 
+            if(confirm("Xóa trắng lịch hiện tại? Mọi khoản nợ đang được xếp trên bảng sẽ hoàn trả lại về hồ sơ người dùng.")) { 
+                
+                days.forEach(day => {
+                    if (currentSchedule[day]) {
+                        for (let task in currentSchedule[day]) {
+                            let cell = currentSchedule[day][task];
+                            if (cell.isDebt) {
+                                let rawName = stripStatusPrefix(cell.name); 
+                                let m = members.find(x => x.name === rawName);
+                                if(m) m.debts.push({day: day, task: task, frozen: false});
+                            }
+                        }
+                    }
+                });
+
+                currentSchedule = {}; 
+                weekModeText = "Chưa có dữ liệu"; 
+                saveData(); 
+            } 
+        }
+        renderUI();
+    </script>
+</body>
+</html>
