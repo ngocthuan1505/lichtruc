@@ -84,7 +84,7 @@
         .medal-icon { font-size: 1.2em; margin-right: 5px;}
         .score-col { display: none; background-color: #fffde7; } 
 
-        .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; clear: both; }
         /* V25: Bảng trong khung cuộn phải được PHÉP rộng hơn màn hình (auto), không bị ép co về 100%,
            nếu không trình duyệt sẽ bóp từng cột tới mức chữ bị vỡ từng ký tự (lỗi trong ảnh chụp màn hình). */
         .table-scroll table, .table-scroll .matrix-table { width: auto; min-width: 100%; }
@@ -124,7 +124,7 @@
     <div class="container">
         <div class="panel" id="leaderboard-section">
             <h2 style="color: #f57f17; margin-top: 0;">
-                🏆 Bảng Xếp Hạng Cư Xá
+                🏆 Bảng Xếp Hạng Cư Xá 
                 <button onclick="toggleLeaderboard()" class="btn-history" style="float: right;">Ẩn / Hiện Bảng</button>
                 <button onclick="toggleScoreColumn()" class="btn-warning" style="float: right; margin-right: 10px;">👁️ Ẩn / Hiện Điểm Số</button>
             </h2>
