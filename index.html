@@ -124,7 +124,7 @@
     <div class="container">
         <div class="panel" id="leaderboard-section">
             <h2 style="color: #f57f17; margin-top: 0;">
-                🏆 Bảng Xếp Hạng Cư Xá 
+                🏆 Bảng Phong Thần Cư Xá 
                 <button onclick="toggleLeaderboard()" class="btn-history" style="float: right;">Ẩn / Hiện Bảng</button>
                 <button onclick="toggleScoreColumn()" class="btn-warning" style="float: right; margin-right: 10px;">👁️ Ẩn / Hiện Điểm Số</button>
             </h2>
@@ -415,16 +415,19 @@
         // Nếu HARDCODED_FIREBASE_CONFIG được điền sẵn (baked vào file), MỌI máy mở cùng file này sẽ
         // tự động đồng bộ, không cần cài đặt gì thêm. Nếu để null, mỗi máy có thể tự dán cấu hình riêng
         // qua nút "Đồng Bộ" (lưu trong localStorage của máy đó).
-        const HARDCODED_FIREBASE_CONFIG = {
-            apiKey: "AIzaSyASRFlnmv6qs4m2tGC27LrPNGtvruugolQ",
-            authDomain: "lichtruc-fc561.firebaseapp.com",
-            databaseURL: "https://lichtruc-fc561-default-rtdb.firebaseio.com",
-            projectId: "lichtruc-fc561",
-            storageBucket: "lichtruc-fc561.firebasestorage.app",
-            messagingSenderId: "815752278757",
-            appId: "1:815752278757:web:b221e267932e8924c15a0c",
-            measurementId: "G-W528748W95"
-        };
+        // V29: Tắt đồng bộ theo yêu cầu - quay về dùng local-only (localStorage) trên từng máy.
+        // Config cũ (project lichtruc-fc561) giữ lại dạng comment, muốn bật lại chỉ cần bỏ comment:
+        // const HARDCODED_FIREBASE_CONFIG = {
+        //     apiKey: "AIzaSyASRFlnmv6qs4m2tGC27LrPNGtvruugolQ",
+        //     authDomain: "lichtruc-fc561.firebaseapp.com",
+        //     databaseURL: "https://lichtruc-fc561-default-rtdb.firebaseio.com",
+        //     projectId: "lichtruc-fc561",
+        //     storageBucket: "lichtruc-fc561.firebasestorage.app",
+        //     messagingSenderId: "815752278757",
+        //     appId: "1:815752278757:web:b221e267932e8924c15a0c",
+        //     measurementId: "G-W528748W95"
+        // };
+        const HARDCODED_FIREBASE_CONFIG = null;
         let firebaseConfig = HARDCODED_FIREBASE_CONFIG || JSON.parse(localStorage.getItem('cuxa_firebase_config') || 'null');
         let syncEnabled = false;
         let dbRef = null;
