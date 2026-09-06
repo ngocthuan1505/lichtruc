@@ -85,6 +85,10 @@
         .score-col { display: none; background-color: #fffde7; } 
 
         .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        /* V25: Bảng trong khung cuộn phải được PHÉP rộng hơn màn hình (auto), không bị ép co về 100%,
+           nếu không trình duyệt sẽ bóp từng cột tới mức chữ bị vỡ từng ký tự (lỗi trong ảnh chụp màn hình). */
+        .table-scroll table, .table-scroll .matrix-table { width: auto; min-width: 100%; }
+        .table-scroll th, .table-scroll td { white-space: nowrap; }
 
         @media (max-width: 600px) {
             body { margin: 8px; }
@@ -110,11 +114,17 @@
 <body>
 
     <h1>Quản Lý Lịch Trực Cư Xá (V22 - Đồng Bộ Real-Time)</h1>
+    <div style="margin-bottom: 15px;">
+        <button onclick="openSyncModal()" style="background: white; border: 1px solid #ccc; color: #333; font-weight: bold;">
+            🔄 Đồng Bộ: <span id="sync-badge">⚪ Chưa bật đồng bộ</span>
+        </button>
+        <span id="sync-time" style="font-size: 12px; color: #888; margin-left: 8px;"></span>
+    </div>
 
     <div class="container">
         <div class="panel" id="leaderboard-section">
             <h2 style="color: #f57f17; margin-top: 0;">
-                🏆 Bảng Xếp Hạng Cư Xá 
+                🏆 Bảng Phong Thần Cư Xá 
                 <button onclick="toggleLeaderboard()" class="btn-history" style="float: right;">Ẩn / Hiện Bảng</button>
                 <button onclick="toggleScoreColumn()" class="btn-warning" style="float: right; margin-right: 10px;">👁️ Ẩn / Hiện Điểm Số</button>
             </h2>
@@ -165,7 +175,7 @@
         <div class="panel">
             <h2>⚙️ Cấu Hình Đầu Việc Tự Động <button onclick="toggleConfig()" class="btn-history" style="float: right;">Hiển thị / Ẩn</button></h2>
             <div id="config-section">
-                <div style="overflow-x: auto;">
+                <div class="table-scroll">
                     <table class="matrix-table">
                         <thead>
                             <tr>
@@ -186,7 +196,7 @@
 
         <div class="panel busy-settings">
             <h2>⛔ Lịch Bận Cá Nhân & Nghỉ Dài Hạn (Về quê)</h2>
-            <div style="overflow-x: auto;">
+            <div class="table-scroll">
                 <table class="matrix-table">
                     <thead>
                         <tr>
@@ -274,6 +284,32 @@
         </div>
     </div>
 
+    <div id="sync-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeSyncModal()">&times;</span>
+            <h2 style="margin-top: 0;">🔄 Đồng Bộ Nhiều Thiết Bị</h2>
+            <p class="note">Dữ liệu mặc định chỉ lưu trên máy này (localStorage). Để nhiều iPhone cùng xem/sửa chung 1 lịch, cần kết nối tới 1 Firebase Realtime Database miễn phí (chỉ cần làm 1 lần).</p>
+
+            <ol style="font-size: 14px; line-height: 1.6;">
+                <li>Vào <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → Đăng nhập Google → <b>Add project</b> (đặt tên tuỳ ý, ví dụ <i>cuxa-lichtruc</i>) → tắt Google Analytics cho nhanh.</li>
+                <li>Trong project vừa tạo, vào mục <b>Build → Realtime Database</b> → Create Database → chọn vị trí bất kỳ → chọn chế độ <b>Start in test mode</b>.</li>
+                <li>Vào tab <b>Rules</b> của Realtime Database, dán đè:
+                    <pre style="background:#eee; padding:8px; border-radius:4px; overflow-x:auto;">{ "rules": { ".read": true, ".write": true } }</pre>
+                    rồi bấm <b>Publish</b>. (Lưu ý: cách này đơn giản, ai có link project cũng đọc/ghi được - phù hợp cho lịch trực nội bộ, không phải dữ liệu nhạy cảm.)
+                </li>
+                <li>Bấm ⚙️ (Project settings) ở góc trên trái → cuộn xuống <b>Your apps</b> → bấm icon <b>&lt;/&gt; (Web)</b> → đặt tên app → Register app.</li>
+                <li>Firebase sẽ hiện đoạn code chứa <code>const firebaseConfig = {...}</code>. Copy <b>toàn bộ đoạn đó</b> và dán vào ô bên dưới.</li>
+            </ol>
+
+            <textarea id="sync-config-input" style="height: 140px; font-size: 13px;" placeholder='Dán nguyên đoạn: const firebaseConfig = { apiKey: "...", databaseURL: "...", ... };'></textarea>
+            <div style="margin-top: 10px;">
+                <button onclick="saveSyncConfig()" class="btn-success">✅ Lưu & Kết Nối</button>
+                <button onclick="disconnectSync()" class="btn-danger">🔌 Ngắt Đồng Bộ</button>
+            </div>
+            <p class="note">Mẹo: sau khi làm xong trên 1 máy, gửi đoạn cấu hình này cho các máy khác (qua Zalo) để dán vào - hoặc nhờ mình "nướng" thẳng vào file để mọi người mở lên là tự động đồng bộ, không cần dán gì cả.</p>
+        </div>
+    </div>
+
     <div id="penaltyModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closePenaltyModal()">&times;</span>
@@ -313,6 +349,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
     <script>
         const defaultNames = ["Khoa","Thy","Triết","Hân","Khang","Trang","H.Nguyên","Ngân","Ánh","Thuận","Bình","Vy"];
         const taskKeys = ["san", "tret", "phong", "thuong", "fridge"];
@@ -372,7 +410,146 @@
         let currentPenaltyMember = null;
         let showScoreColumn = false;
 
-        function saveData() {
+        // ================= V25: ĐỒNG BỘ NHIỀU THIẾT BỊ (Firebase Realtime Database) =================
+        // Nếu HARDCODED_FIREBASE_CONFIG được điền sẵn (baked vào file), MỌI máy mở cùng file này sẽ
+        // tự động đồng bộ, không cần cài đặt gì thêm. Nếu để null, mỗi máy có thể tự dán cấu hình riêng
+        // qua nút "Đồng Bộ" (lưu trong localStorage của máy đó).
+        const HARDCODED_FIREBASE_CONFIG = {
+            apiKey: "AIzaSyASRFlnmv6qs4m2tGC27LrPNGtvruugolQ",
+            authDomain: "lichtruc-fc561.firebaseapp.com",
+            databaseURL: "https://lichtruc-fc561-default-rtdb.firebaseio.com",
+            projectId: "lichtruc-fc561",
+            storageBucket: "lichtruc-fc561.firebasestorage.app",
+            messagingSenderId: "815752278757",
+            appId: "1:815752278757:web:b221e267932e8924c15a0c",
+            measurementId: "G-W528748W95"
+        };
+        let firebaseConfig = HARDCODED_FIREBASE_CONFIG || JSON.parse(localStorage.getItem('cuxa_firebase_config') || 'null');
+        let syncEnabled = false;
+        let dbRef = null;
+        let syncStatus = 'off'; // off | connecting | online | pending | error
+        let pendingRemoteData = null;
+        let isApplyingRemote = false;
+
+        function updateSyncStatusUI(status) {
+            syncStatus = status;
+            let el = document.getElementById('sync-badge');
+            if (!el) return;
+            const map = {
+                off:        { icon: '⚪', text: 'Chưa bật đồng bộ', color: '#888' },
+                connecting: { icon: '🟡', text: 'Đang kết nối...', color: '#f9a825' },
+                online:     { icon: '🟢', text: 'Đã đồng bộ', color: '#2e7d32' },
+                pending:    { icon: '🟠', text: 'Có bản mới (tắt Sửa để nhận)', color: '#ef6c00' },
+                error:      { icon: '🔴', text: 'Lỗi đồng bộ', color: '#c62828' }
+            };
+            let s = map[status] || map.off;
+            el.innerHTML = `${s.icon} ${s.text}`;
+            el.style.color = s.color;
+            let timeEl = document.getElementById('sync-time');
+            if (timeEl) {
+                timeEl.innerText = (status === 'online' && lastSyncedUpdatedAt)
+                    ? `(cập nhật lúc ${new Date(lastSyncedUpdatedAt).toLocaleTimeString('vi-VN')})` : '';
+            }
+        }
+
+        let lastSyncedUpdatedAt = null;
+
+        function applyRemoteState(remote) {
+            isApplyingRemote = true;
+            members = remote.members || members;
+            currentSchedule = remote.schedule || {};
+            historyArchive = remote.archive || [];
+            currentOff = remote.off || [];
+            weekModeText = remote.mode || weekModeText;
+            slotsConfig = remote.config || slotsConfig;
+            holidays = remote.holidays || [];
+            historySchedule = historyArchive[0] ? historyArchive[0].schedule : {};
+            lastSyncedUpdatedAt = remote.updatedAt || Date.now();
+            persistLocal();
+            renderUI();
+            isApplyingRemote = false;
+        }
+
+        // V26: Kiểm tra xem có ai vừa cập nhật server sau lần mình xem gần nhất không, để tránh
+        // 2 người bấm "Xếp lịch"/"Chốt tuần" gần như cùng lúc ghi đè âm thầm lên nhau.
+        async function warnIfStale(actionLabel) {
+            if (!syncEnabled || !dbRef) return false; // không bật đồng bộ thì khỏi cần check
+            try {
+                let snap = await dbRef.once('value');
+                let remote = snap.val();
+                if (remote && remote.updatedAt && lastSyncedUpdatedAt && remote.updatedAt > lastSyncedUpdatedAt) {
+                    let ok = confirm(`⚠️ Có người khác vừa cập nhật dữ liệu (sau lần bạn xem gần nhất), có thể do đang xếp/chốt tuần cùng lúc.\n\nBấm OK để TẢI BẢN MỚI NHẤT trước (thao tác "${actionLabel}" sẽ dừng lại, xem xong bấm lại nếu vẫn cần), hoặc Cancel để tự chịu rủi ro ghi đè.`);
+                    if (ok) { applyRemoteState(remote); return true; }
+                }
+            } catch (e) { /* không check được thì thôi, không chặn thao tác */ }
+            return false;
+        }
+
+        function initFirebaseSync() {
+            if (!firebaseConfig) { updateSyncStatusUI('off'); return; }
+            try {
+                if (!firebase.apps || !firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                dbRef = firebase.database().ref('cuxa_data');
+                syncEnabled = true;
+                updateSyncStatusUI('connecting');
+                dbRef.on('value', (snapshot) => {
+                    let remote = snapshot.val();
+                    if (!remote) { updateSyncStatusUI('online'); return; } // Chưa có gì trên server, lần lưu đầu sẽ đẩy lên
+                    if (isEditMode) { pendingRemoteData = remote; updateSyncStatusUI('pending'); return; }
+                    applyRemoteState(remote);
+                    updateSyncStatusUI('online');
+                }, (err) => { console.error(err); updateSyncStatusUI('error'); });
+            } catch (e) { console.error(e); updateSyncStatusUI('error'); }
+        }
+
+        // Gọi khi tắt chế độ Sửa Thủ Công, để áp dụng bản cập nhật từ máy khác nếu đang chờ
+        function applyPendingRemoteIfAny() {
+            if (pendingRemoteData) {
+                let data = pendingRemoteData; pendingRemoteData = null;
+                applyRemoteState(data);
+                updateSyncStatusUI('online');
+            }
+        }
+
+        function openSyncModal() {
+            document.getElementById('sync-config-input').value = firebaseConfig ? JSON.stringify(firebaseConfig, null, 2) : '';
+            document.getElementById('sync-modal').style.display = 'block';
+        }
+        function closeSyncModal() { document.getElementById('sync-modal').style.display = 'none'; }
+
+        function saveSyncConfig() {
+            let raw = document.getElementById('sync-config-input').value.trim();
+            if (!raw) return alert("Vui lòng dán cấu hình Firebase vào ô trên!");
+            try {
+                // Cho phép dán nguyên đoạn "const firebaseConfig = {...};" hoặc chỉ phần {...}
+                let match = raw.match(/\{[\s\S]*\}/);
+                if (!match) throw new Error("Không tìm thấy object cấu hình hợp lệ");
+                let cfg = new Function('return ' + match[0])();
+                if (!cfg.databaseURL) return alert("⚠️ Cấu hình thiếu 'databaseURL'. Hãy chắc chắn bạn đã tạo Realtime Database (không phải chỉ Firestore) và copy đúng đoạn cấu hình Web App.");
+                firebaseConfig = cfg;
+                localStorage.setItem('cuxa_firebase_config', JSON.stringify(cfg));
+                closeSyncModal();
+                initFirebaseSync();
+                alert("✅ Đã lưu cấu hình! Đang kết nối đồng bộ...");
+            } catch (e) {
+                alert("❌ Cấu hình không hợp lệ, vui lòng copy nguyên văn đoạn firebaseConfig từ Firebase Console. Lỗi: " + e.message);
+            }
+        }
+
+        function disconnectSync() {
+            if (HARDCODED_FIREBASE_CONFIG) {
+                if (!confirm("Lưu ý: file này đã được nướng sẵn cấu hình đồng bộ chung của cả cư xá, nên nếu tải lại trang sẽ tự kết nối lại. Chỉ tắt tạm trong phiên này thôi, vẫn muốn tắt chứ?")) return;
+            } else if (!confirm("Ngắt đồng bộ trên máy này? Dữ liệu vẫn được lưu offline bình thường, chỉ là không còn tự cập nhật giữa các máy nữa.")) return;
+            firebaseConfig = null;
+            localStorage.removeItem('cuxa_firebase_config');
+            if (dbRef) dbRef.off();
+            syncEnabled = false; dbRef = null;
+            updateSyncStatusUI('off');
+            closeSyncModal();
+        }
+        // ================= HẾT PHẦN ĐỒNG BỘ =================
+
+        function persistLocal() {
             localStorage.setItem('cuxa_members_v22', JSON.stringify(members));
             localStorage.setItem('cuxa_schedule_v22', JSON.stringify(currentSchedule));
             localStorage.setItem('cuxa_off_v22', JSON.stringify(currentOff));
@@ -381,6 +558,18 @@
             localStorage.setItem('cuxa_config_v22', JSON.stringify(slotsConfig));
             localStorage.setItem('cuxa_holidays_v22', JSON.stringify(holidays));
             localStorage.setItem('cuxa_archive_v23', JSON.stringify(historyArchive));
+        }
+
+        function saveData() {
+            persistLocal();
+            if (syncEnabled && dbRef && !isApplyingRemote) {
+                let ts = Date.now();
+                dbRef.set({
+                    members, schedule: currentSchedule, archive: historyArchive, off: currentOff,
+                    mode: weekModeText, config: slotsConfig, holidays, updatedAt: ts
+                }).then(() => { lastSyncedUpdatedAt = ts; updateSyncStatusUI('online'); })
+                  .catch(err => { console.error(err); updateSyncStatusUI('error'); });
+            }
             renderUI();
         }
 
@@ -476,6 +665,7 @@
             } else {
                 btn.innerText = "✏️ Bật Sửa Thủ Công"; btn.classList.replace('btn-success', 'btn-edit');
                 statsBar.style.display = 'none';
+                applyPendingRemoteIfAny();
             }
             renderUI();
         }
@@ -1112,8 +1302,9 @@
             return null;
         }
 
-        function generateSchedule() {
+        async function generateSchedule() {
             if (isEditMode) return alert("Vui lòng Lưu Chỉnh Sửa trước khi Xếp tự động!");
+            if (await warnIfStale("xếp lịch mới")) return;
             
             let activeMembers = members.filter(m => !m.isLongLeave);
 
@@ -1147,9 +1338,10 @@
             }
         }
 
-        function chotTuan() {
+        async function chotTuan() {
             if (isEditMode) return alert("Vui lòng Lưu Chỉnh Sửa (tắt chế độ sửa thủ công) trước khi Chốt Tuần!");
             if (Object.keys(currentSchedule).length === 0) return alert("Chưa có lịch tuần này!");
+            if (await warnIfStale("chốt tuần")) return;
 
             let pendingCount = 0;
             days.forEach(day => {
@@ -1220,6 +1412,7 @@
             } 
         }
         renderUI();
+        initFirebaseSync();
     </script>
 </body>
 </html>
