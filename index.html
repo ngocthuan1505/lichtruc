@@ -495,6 +495,11 @@
                 dbRef.on('value', (snapshot) => {
                     let remote = snapshot.val();
                     if (!remote) { updateSyncStatusUI('online'); return; } // Chưa có gì trên server, lần lưu đầu sẽ đẩy lên
+                    // V27: Chặn dữ liệu CŨ (đến trễ do độ trễ mạng) đè lên dữ liệu MỚI mình vừa lưu -
+                    // đây là nguyên nhân gây mất dữ liệu khi thao tác ngay lúc đang "Đang kết nối...".
+                    if (remote.updatedAt && lastSyncedUpdatedAt && remote.updatedAt < lastSyncedUpdatedAt) {
+                        return; // dữ liệu này cũ hơn cái mình đang có, bỏ qua, không áp dụng
+                    }
                     if (isEditMode) { pendingRemoteData = remote; updateSyncStatusUI('pending'); return; }
                     applyRemoteState(remote);
                     updateSyncStatusUI('online');
@@ -564,10 +569,13 @@
             persistLocal();
             if (syncEnabled && dbRef && !isApplyingRemote) {
                 let ts = Date.now();
+                // V27: Đánh dấu mốc NGAY (không chờ server xác nhận) để mọi bản dữ liệu cũ đến trễ
+                // (do độ trễ mạng, đặc biệt lúc mới mở trang còn "Đang kết nối") đều bị nhận ra là cũ và bỏ qua.
+                lastSyncedUpdatedAt = ts;
                 dbRef.set({
                     members, schedule: currentSchedule, archive: historyArchive, off: currentOff,
                     mode: weekModeText, config: slotsConfig, holidays, updatedAt: ts
-                }).then(() => { lastSyncedUpdatedAt = ts; updateSyncStatusUI('online'); })
+                }).then(() => { updateSyncStatusUI('online'); })
                   .catch(err => { console.error(err); updateSyncStatusUI('error'); });
             }
             renderUI();
