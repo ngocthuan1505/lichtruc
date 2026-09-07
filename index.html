@@ -1062,7 +1062,20 @@
             // Phải mở tab TRẮNG ngay lúc bấm (đồng bộ) để Safari không chặn popup, rồi mới điền ảnh vào sau.
             let newTab = window.open('', '_blank');
             let target = document.getElementById('schedule-capture');
+            let scrollWrap = target.querySelector('.table-scroll');
+
+            // V31: .table-scroll bị cắt cụt theo đúng phần đang cuộn thấy trên màn hình (bug cũ) - vì
+            // html2canvas chụp lại y hệt như trình duyệt đang hiển thị, kể cả phần bị che bởi overflow-x.
+            // Phải tạm bỏ giới hạn cuộn/chiều rộng để chụp được TOÀN BỘ bảng, rồi trả lại như cũ ngay sau đó.
+            let originalCss = scrollWrap ? scrollWrap.style.cssText : null;
+            if (scrollWrap) {
+                scrollWrap.scrollLeft = 0;
+                scrollWrap.style.overflow = 'visible';
+                scrollWrap.style.width = 'max-content';
+            }
+
             html2canvas(target, { backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
+                if (scrollWrap) scrollWrap.style.cssText = originalCss; // trả lại ngay khi đã chụp xong
                 let dataUrl = canvas.toDataURL('image/png');
                 if (newTab) {
                     newTab.document.write(`
@@ -1081,6 +1094,7 @@
                     alert('⚠️ Trình duyệt đã chặn mở tab mới. Vào Cài đặt Safari → tắt "Chặn cửa sổ bật lên" cho trang này rồi thử lại.');
                 }
             }).catch(() => {
+                if (scrollWrap) scrollWrap.style.cssText = originalCss;
                 if (newTab) newTab.close();
                 alert('❌ Xuất ảnh thất bại, thử dùng nút "In / Lưu PDF" thay thế nhé.');
             });
@@ -1357,6 +1371,30 @@
             return null;
         }
 
+        // V32: Đề xuất 1 bản Cấu Hình Đầu Việc khớp với số người đang hoạt động, bằng cách bớt bớt các
+        // ngày của những đầu việc đang có TẦN SUẤT CAO NHẤT trong tuần trước (ít ảnh hưởng nhất khi cắt 1 ngày
+        // so với việc chỉ chạy 1 ngày/tuần). Không tự áp dụng - chỉ đề xuất, người dùng xác nhận mới áp dụng.
+        function suggestFeasibleConfig(activeMembers) {
+            let newConfig = JSON.parse(JSON.stringify(slotsConfig));
+            let removed = [];
+            days.forEach(day => {
+                if (holidays.includes(day)) return;
+                let neededTasks = taskKeys.filter(task => newConfig[task] && newConfig[task].includes(day));
+                let excess = neededTasks.length - activeMembers.length;
+                while (excess > 0) {
+                    let candidate = neededTasks
+                        .filter(t => newConfig[t].includes(day))
+                        .sort((a, b) => newConfig[b].length - newConfig[a].length)[0];
+                    if (!candidate) break;
+                    newConfig[candidate] = newConfig[candidate].filter(d => d !== day);
+                    removed.push({ task: candidate, day });
+                    neededTasks = neededTasks.filter(t => t !== candidate);
+                    excess--;
+                }
+            });
+            return { newConfig, removed };
+        }
+
         async function generateSchedule() {
             if (isEditMode) return alert("Vui lòng Lưu Chỉnh Sửa trước khi Xếp tự động!");
             if (await warnIfStale("xếp lịch mới")) return;
@@ -1364,7 +1402,16 @@
             let activeMembers = members.filter(m => !m.isLongLeave);
 
             let feasibilityError = checkFeasibility(activeMembers);
-            if (feasibilityError) return alert("⚠️ " + feasibilityError);
+            if (feasibilityError) {
+                let { newConfig, removed } = suggestFeasibleConfig(activeMembers);
+                if (removed.length === 0) return alert("⚠️ " + feasibilityError);
+                let diffText = removed.map(r => `- Bỏ "${taskNamesMap[r.task]}" khỏi ${r.day}`).join('\n');
+                let apply = confirm(`⚠️ ${feasibilityError}\n\n🔧 Hệ thống có thể tự điều chỉnh "Cấu Hình Đầu Việc" cho khớp với ${activeMembers.length} người đang hoạt động:\n${diffText}\n\nBấm OK để áp dụng đề xuất này và xếp lịch ngay, hoặc Cancel để tự chỉnh tay trong "Cấu Hình Đầu Việc".`);
+                if (!apply) return;
+                slotsConfig = newConfig;
+                feasibilityError = checkFeasibility(activeMembers);
+                if (feasibilityError) return alert("⚠️ Vẫn chưa đủ khớp, cần giảm bớt đầu việc nhiều hơn hoặc bổ sung thêm thành viên:\n" + feasibilityError);
+            }
 
             autoResetCycles(activeMembers);
 
