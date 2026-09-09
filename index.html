@@ -124,7 +124,7 @@
     <div class="container">
         <div class="panel" id="leaderboard-section">
             <h2 style="color: #f57f17; margin-top: 0;">
-                🏆 Bảng Xếp Hạng Cư Xá 
+                🏆 Bảng Phong Thần Cư Xá 
                 <button onclick="toggleLeaderboard()" class="btn-history" style="float: right;">Ẩn / Hiện Bảng</button>
                 <button onclick="toggleScoreColumn()" class="btn-warning" style="float: right; margin-right: 10px;">👁️ Ẩn / Hiện Điểm Số</button>
             </h2>
@@ -377,7 +377,7 @@
                    
         if (!members) {
             members = defaultNames.map(name => ({
-                name: name, debts: [], offCycle: false, extraCycle: false, fridgeCycle: false, nvsCycle: false, busyDays: [], isLongLeave: false, stats: {done: 0, missed: 0}
+                name: name, debts: [], offCycle: false, extraCycle: false, fridgeCycle: false, nvsCycle: false, busyDays: [], isLongLeave: false, stats: {done: 0, missed: 0, debtsPaid: 0}
             }));
         }
 
@@ -386,6 +386,7 @@
             if (m.busyDays === undefined) m.busyDays = [];
             if (m.isLongLeave === undefined) m.isLongLeave = false;
             if (m.stats === undefined) m.stats = {done: 0, missed: 0};
+            if (m.stats.debtsPaid === undefined) m.stats.debtsPaid = 0;
             m.debts.forEach(d => { if (d.frozen === undefined) d.frozen = false; });
         });
 
@@ -615,7 +616,7 @@
             if (!name) return alert("Vui lòng nhập tên!");
             if (members.length >= 25) return alert("Hỗ trợ tối đa 25 người!");
             if (members.find(m => m.name.toLowerCase() === name.toLowerCase())) return alert("Tên này đã tồn tại!");
-            members.push({ name: name, debts: [], offCycle: false, extraCycle: false, fridgeCycle: false, nvsCycle: false, busyDays: [], isLongLeave: false, stats: {done: 0, missed: 0} });
+            members.push({ name: name, debts: [], offCycle: false, extraCycle: false, fridgeCycle: false, nvsCycle: false, busyDays: [], isLongLeave: false, stats: {done: 0, missed: 0, debtsPaid: 0} });
             input.value = ''; saveData();
         }
 
@@ -631,7 +632,7 @@
             if (newName === null) return;
             newName = newName.trim();
             if (!newName || newName === oldName) return;
-            if (members.some(m => m.name.toLowerCase() === newName.toLowerCase())) return alert("Tên này đã tồn tại!");
+            if (members.some(m => m.name !== oldName && m.name.toLowerCase() === newName.toLowerCase())) return alert("Tên này đã tồn tại!");
 
             let m = members.find(x => x.name === oldName);
             if (!m) return;
@@ -734,10 +735,11 @@
         function manualChangeCell(day, task, selectElem) {
             let newName = selectElem.value;
             let oldCell = currentSchedule[day] ? currentSchedule[day][task] : null;
+            let oldRawName = null;
 
             // 1. Thu hồi nợ nếu ô cũ đang chứa người trả nợ
-            if (oldCell && oldCell.name !== "---") {
-                let oldRawName = stripStatusPrefix(oldCell.name);
+            if (oldCell && oldCell.name && oldCell.name !== "---") {
+                oldRawName = stripStatusPrefix(oldCell.name);
                 if (oldCell.isDebt) {
                     let mOld = members.find(x => x.name === oldRawName);
                     // Bơm lại nợ vào danh sách chờ
@@ -762,18 +764,19 @@
                 }
                 
                 currentSchedule[day][task] = { name: newName, isDebt: isDebt, status: 'pending' };
+            }
 
-                // 🔥 AUTO-TICK GÁNH CA nếu tổng số ca >= 2
-                if (getShiftCount(newName) >= 2) mNew.extraCycle = true;
+            // V35: Tính lại "Đã Gánh Ca?" cho CẢ người cũ lẫn người mới dựa trên số ca THỰC TẾ sau khi sửa -
+            // trước đây chỉ tự BẬT khi >=2 ca mà không bao giờ tự TẮT lại nếu sau đó rút bớt ca, khiến cờ
+            // này bị kẹt sai (người không còn gánh ca nào vẫn bị đánh dấu "Đã Gánh Ca" mãi mãi).
+            if (oldRawName && oldRawName !== newName) {
+                let mOld = members.find(x => x.name === oldRawName);
+                if (mOld) mOld.extraCycle = getShiftCount(oldRawName) >= 2;
             }
-            
-            if(newName !== "---" && members.find(m => m.name === newName).busyDays.includes(day)) {
-                selectElem.classList.add('busy-warn');
-            } else {
-                selectElem.classList.remove('busy-warn');
+            if (newName !== "---") {
+                members.find(x => x.name === newName).extraCycle = getShiftCount(newName) >= 2;
             }
-            
-            localStorage.setItem('cuxa_schedule_v22', JSON.stringify(currentSchedule));
+
             saveData(); // Gọi renderUI() để thẻ (Nợ) hoặc Gánh Ca tự động biến mất/xuất hiện ngay lập tức
             updateLiveStats();
         }
@@ -827,6 +830,9 @@
                 if (m.debts.length > 0) {
                     let debtStrs = m.debts.map(d => d.frozen ? `<span class="frozen">${d.day} (${taskNamesMap[d.task]}) ❄️</span>` : `${d.day} (${taskNamesMap[d.task]})`);
                     debtDisplay = `<b>${activeDebts}</b> <br><small style="color:red">${debtStrs.join('<br>')}</small>`;
+                }
+                if (m.stats.debtsPaid) {
+                    debtDisplay += `<br><small style="color:#2e7d32;">✔️ Đã bù/phạt xong: ${m.stats.debtsPaid} ca (không tính điểm)</small>`;
                 }
                 
                 let offDisplay = m.offCycle ? '✔️' : '-';
@@ -1018,6 +1024,7 @@
                     if (m.busyDays === undefined) m.busyDays = [];
                     if (m.isLongLeave === undefined) m.isLongLeave = false;
                     if (m.stats === undefined) m.stats = {done: 0, missed: 0};
+                    if (m.stats.debtsPaid === undefined) m.stats.debtsPaid = 0;
                     m.debts.forEach(d => { if (d.frozen === undefined) d.frozen = false; });
                 });
                 saveData(); alert("Đã áp dụng dữ liệu!");
@@ -1053,6 +1060,54 @@
             } else fallbackCopy();
         }
 
+        // V34: Bảng đẹp cho ảnh chia sẻ - style riêng (không dùng bảng chức năng trên màn hình), có màu theo
+        // từng đầu việc + icon, giống mẫu banner lịch trực đẹp. Chấm đỏ nhỏ = ca trả nợ/bù phạt.
+        const exportTaskStyle = {
+            san:    { icon: '🌳', headerBg: '#43a047', bodyBg: '#e8f5e9' },
+            tret:   { icon: '🏠', headerBg: '#e65100', bodyBg: '#fff3e0' },
+            thuong: { icon: '🛏️', headerBg: '#7b1fa2', bodyBg: '#f3e5f5' },
+            phong:  { icon: '🚪', headerBg: '#d81b60', bodyBg: '#fce4ec' },
+            fridge: { icon: '🧊', headerBg: '#1565c0', bodyBg: '#e3f2fd' }
+        };
+        function buildPrettyExportHTML() {
+            let colOrder = ['san', 'tret', 'thuong', 'phong', 'fridge'].filter(t => taskKeys.includes(t));
+            let headerCells = colOrder.map(t => {
+                let s = exportTaskStyle[t];
+                return `<th style="background:${s.headerBg}; color:white; padding:14px 6px; font-size:14px; border-radius:10px; min-width:90px;">
+                            <div style="font-size:22px; line-height:1.3;">${s.icon}</div>${taskNamesMap[t].toUpperCase()}
+                        </th>`;
+            }).join('');
+
+            let rows = days.map(day => {
+                let cells = colOrder.map(t => {
+                    let s = exportTaskStyle[t];
+                    let cell = currentSchedule[day] && currentSchedule[day][t];
+                    let content = '—', dot = '';
+                    if (holidays.includes(day)) content = 'Nghỉ Lễ';
+                    else if (cell) {
+                        content = stripStatusPrefix(cell.name);
+                        if (cell.isDebt) dot = ' <span style="color:#e53935;">●</span>';
+                    }
+                    return `<td style="padding:14px 6px; text-align:center; font-weight:700; color:#1a237e; background:${s.bodyBg}; border-radius:10px;">${content}${dot}</td>`;
+                }).join('');
+                return `<tr><td style="padding:14px 8px; font-weight:800; color:#0d47a1; text-align:center; background:#e3f2fd; border-radius:10px;">${day}</td>${cells}</tr>`;
+            }).join('');
+
+            return `
+            <div style="width:820px; font-family:'Segoe UI', Tahoma, sans-serif; background:#fdfefe; border-radius:20px; overflow:hidden; border:1px solid #dbe9f4;">
+                <div style="background:linear-gradient(135deg, #cfe8fb, #e3f2fd); padding:26px 20px; text-align:center;">
+                    <div style="font-size:42px;">📅</div>
+                    <div style="font-size:34px; font-weight:800; color:#0d3b66; letter-spacing:1px;">LỊCH TRỰC TUẦN</div>
+                    <div style="font-size:20px; font-weight:600; color:#1565c0; margin-top:2px;">${new Date().toLocaleDateString('vi-VN')}</div>
+                </div>
+                <table style="width:100%; border-collapse:separate; border-spacing:6px 6px; padding:8px 14px 20px; margin:0 auto;">
+                    <thead><tr><th style="padding:14px 8px; background:#bbdefb; color:#0d47a1; border-radius:10px;">THỨ</th>${headerCells}</tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+                <div style="text-align:center; padding-bottom:14px; font-size:12px; color:#90a4ae;">● = ca bù/phạt (trả nợ)</div>
+            </div>`;
+        }
+
         // V23: Xuất bảng lịch tuần hiện tại thành ảnh PNG để chia sẻ
         function exportScheduleImage() {
             if (typeof html2canvas === 'undefined') return alert('⏳ Công cụ xuất ảnh đang tải, vui lòng thử lại sau vài giây (cần có mạng lần đầu tiên)!');
@@ -1061,21 +1116,21 @@
             // giữ tay lên ảnh → "Lưu vào Ảnh" (thao tác chuẩn của iOS, không cần xin quyền gì thêm).
             // Phải mở tab TRẮNG ngay lúc bấm (đồng bộ) để Safari không chặn popup, rồi mới điền ảnh vào sau.
             let newTab = window.open('', '_blank');
-            let target = document.getElementById('schedule-capture');
-            let scrollWrap = target.querySelector('.table-scroll');
 
-            // V31: .table-scroll bị cắt cụt theo đúng phần đang cuộn thấy trên màn hình (bug cũ) - vì
-            // html2canvas chụp lại y hệt như trình duyệt đang hiển thị, kể cả phần bị che bởi overflow-x.
-            // Phải tạm bỏ giới hạn cuộn/chiều rộng để chụp được TOÀN BỘ bảng, rồi trả lại như cũ ngay sau đó.
-            let originalCss = scrollWrap ? scrollWrap.style.cssText : null;
-            if (scrollWrap) {
-                scrollWrap.scrollLeft = 0;
-                scrollWrap.style.overflow = 'visible';
-                scrollWrap.style.width = 'max-content';
-            }
+            // V34: Dựng 1 khung đẹp RIÊNG để chụp (không chụp thẳng bảng chức năng trên màn hình nữa) -
+            // đặt off-screen (không hiện ra cho người dùng thấy) nhưng vẫn nằm trong DOM để html2canvas
+            // chụp được, với chiều rộng cố định biết trước nên không còn lo bị cắt cụt như trước.
+            let temp = document.createElement('div');
+            temp.style.cssText = 'position:absolute; left:-9999px; top:0;';
+            temp.innerHTML = buildPrettyExportHTML();
+            document.body.appendChild(temp);
+            let captureTarget = temp.firstElementChild;
 
-            html2canvas(target, { backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
-                if (scrollWrap) scrollWrap.style.cssText = originalCss; // trả lại ngay khi đã chụp xong
+            html2canvas(captureTarget, {
+                backgroundColor: '#ffffff', scale: 2,
+                width: captureTarget.scrollWidth, windowWidth: captureTarget.scrollWidth
+            }).then(canvas => {
+                document.body.removeChild(temp);
                 let dataUrl = canvas.toDataURL('image/png');
                 if (newTab) {
                     newTab.document.write(`
@@ -1094,7 +1149,7 @@
                     alert('⚠️ Trình duyệt đã chặn mở tab mới. Vào Cài đặt Safari → tắt "Chặn cửa sổ bật lên" cho trang này rồi thử lại.');
                 }
             }).catch(() => {
-                if (scrollWrap) scrollWrap.style.cssText = originalCss;
+                if (document.body.contains(temp)) document.body.removeChild(temp);
                 if (newTab) newTab.close();
                 alert('❌ Xuất ảnh thất bại, thử dùng nút "In / Lưu PDF" thay thế nhé.');
             });
@@ -1324,14 +1379,18 @@
                 return pool.splice(idx, 1)[0];
             }
 
-            let fSlotIdx = randomizedSlots.findIndex(s => s.task === 'fridge');
-            if (fSlotIdx !== -1) {
-                let fCand = pool.filter(a => !activeMembers.find(m=>m.name===a).fridgeCycle);
-                if (fCand.length === 0) activeMembers.forEach(m => m.fridgeCycle = false);
-                let fSlot = randomizedSlots.splice(fSlotIdx, 1)[0];
-                let fPerson = pickPerson(fSlot, null, false);
-                tempSchedule[fSlot.day][fSlot.task] = { name: fPerson, isDebt: false, status: 'pending' };
-            }
+            // V35: Sửa để xử lý MỌI slot tủ lạnh trong tuần (trước đây chỉ né lặp người cho slot ĐẦU TIÊN
+            // tìm thấy - nếu cấu hình tủ lạnh chạy từ 2 ngày/tuần trở lên, các ngày còn lại bị bỏ sót quy
+            // tắc xoay vòng công bằng). Áp dụng đúng pattern đã dùng cho "tret" bên dưới.
+            let fridgeSlots = randomizedSlots.filter(s => s.task === 'fridge');
+            let fCandCheck = pool.filter(a => !activeMembers.find(m=>m.name===a).fridgeCycle);
+            if (fCandCheck.length < fridgeSlots.length) activeMembers.forEach(m => m.fridgeCycle = false);
+            fridgeSlots.forEach(slot => {
+                let sIdx = randomizedSlots.findIndex(s => s === slot);
+                randomizedSlots.splice(sIdx, 1);
+                let person = pickPerson(slot, null, false);
+                tempSchedule[slot.day][slot.task] = { name: person, isDebt: false, status: 'pending' };
+            });
 
             let tretSlots = randomizedSlots.filter(s => s.task === 'tret');
             let nvsCandCheck = pool.filter(a => !activeMembers.find(m=>m.name===a).nvsCycle);
@@ -1476,7 +1535,15 @@
                         // V22: Nợ đã trừ sẵn lúc xếp, giờ chỉ ghi nhận cycle
                         if (task === 'fridge') m.fridgeCycle = true;
                         if (task === 'tret') m.nvsCycle = true; 
-                        m.stats.done++;
+                        // V33: Trả nợ (bù/phạt) KHÔNG được tính vào "Ca Hoàn Thành"/điểm xếp hạng - vì đây
+                        // là trả lại 1 ca đã từng bùng trước đó, không phải thành tích mới. Nếu tính chung,
+                        // ai bùng nhiều rồi trả dồn 1 tuần sẽ leo top bảng xếp hạng, vô lý so với người
+                        // chưa từng bùng ca nào. Ghi nhận riêng vào debtsPaid để vẫn thấy được là đã trả.
+                        if (cell.isDebt) {
+                            m.stats.debtsPaid = (m.stats.debtsPaid || 0) + 1;
+                        } else {
+                            m.stats.done++;
+                        }
                     }
                 }
             });
