@@ -2,11 +2,11 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Lịch Trực Cư Xá">
-    <title>Hệ Thống Quản Lý Trực Nhà Cư Xá v22</title>
+    <title>Lịch Trực Cư Xá — Online</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f4f6f9; color: #333; }
         h1, h2, h3 { color: #2c3e50; margin-top: 0; }
@@ -113,18 +113,19 @@
 </head>
 <body>
 
-    <h1>Quản Lý Lịch Trực Cư Xá (V22 - Đồng Bộ Real-Time)</h1>
+    <h1>Quản Lý Lịch Trực Cư Xá — Online</h1>
     <div style="margin-bottom: 15px;">
         <button onclick="openSyncModal()" style="background: white; border: 1px solid #ccc; color: #333; font-weight: bold;">
-            🔄 Đồng Bộ: <span id="sync-badge">⚪ Chưa bật đồng bộ</span>
+            🔄 Đồng Bộ: <span id="sync-badge" role="status" aria-live="polite">⚪ Chưa bật đồng bộ</span>
         </button>
+        <button id="backup-warning" hidden onclick="exportUnsyncedBackup()" class="btn-warning">Có bản sửa chưa đồng bộ — tải về</button>
         <span id="sync-time" style="font-size: 12px; color: #888; margin-left: 8px;"></span>
     </div>
 
     <div class="container">
         <div class="panel" id="leaderboard-section">
             <h2 style="color: #f57f17; margin-top: 0;">
-                🏆 Bảng Phong Thần Cư Xá 
+                📊 Thống Kê Trực
                 <button onclick="toggleLeaderboard()" class="btn-history" style="float: right;">Ẩn / Hiện Bảng</button>
                 <button onclick="toggleScoreColumn()" class="btn-warning" style="float: right; margin-right: 10px;">👁️ Ẩn / Hiện Điểm Số</button>
             </h2>
@@ -133,11 +134,11 @@
                 <table style="margin-top: 5px;">
                     <thead>
                         <tr style="background-color: #fbc02d; color: #333;">
-                            <th>Hạng</th>
-                            <th>Tên</th>
-                            <th>✅ Ca Hoàn Thành</th>
-                            <th>❌ Lần Bùng Trực</th>
-                            <th>⚠️ Đang Nợ (Chờ xếp)</th>
+                            <th scope="col">Hạng</th>
+                            <th scope="col">Tên</th>
+                            <th scope="col">✅ Ca Hoàn Thành</th>
+                            <th scope="col">❌ Lần Bùng Trực</th>
+                            <th scope="col">⚠️ Đang Nợ (Chờ xếp)</th>
                             <th class="score-col">🌟 Điểm Xét Duyệt</th>
                         </tr>
                     </thead>
@@ -151,19 +152,19 @@
         <div class="panel">
             <h2>👥 Danh Sách Quản Lý Nhân Sự (<span id="member-count">0</span> TV)</h2>
             <div class="add-member-bar">
-                <input type="text" id="new-member-name" placeholder="Nhập tên người mới...">
+                <input type="text" id="new-member-name" aria-label="Tên thành viên mới" maxlength="80" placeholder="Nhập tên người mới...">
                 <button onclick="addMember()" class="btn-success">+ Thêm Người</button>
             </div>
             <div class="table-scroll">
             <table>
                 <thead>
                     <tr>
-                        <th>Tên</th>
-                        <th>Nợ Trực Chi Tiết</th>
-                        <th>Đã Off?</th>
+                        <th scope="col">Tên</th>
+                        <th scope="col">Nợ Trực Chi Tiết</th>
+                        <th scope="col">Đã Off?</th>
                         <th style="background-color: #fbbc04; color: black;">Đã Gánh Ca?</th>
-                        <th>Tủ Lạnh?</th>
-                        <th>NVS?</th>
+                        <th scope="col">Tủ Lạnh?</th>
+                        <th scope="col">NVS?</th>
                         <th style="min-width: 150px;">Thao Tác</th>
                     </tr>
                 </thead>
@@ -200,9 +201,9 @@
                 <table class="matrix-table">
                     <thead>
                         <tr>
-                            <th>Tên</th>
+                            <th scope="col">Tên</th>
                             <th class="leave-th">Nghỉ Dài Hạn</th>
-                            <th>Thứ 2</th><th>Thứ 3</th><th>Thứ 4</th><th>Thứ 5</th><th>Thứ 6</th><th>Thứ 7</th><th>Chủ Nhật</th>
+                            <th scope="col">Thứ 2</th><th scope="col">Thứ 3</th><th scope="col">Thứ 4</th><th scope="col">Thứ 5</th><th scope="col">Thứ 6</th><th scope="col">Thứ 7</th><th scope="col">Chủ Nhật</th>
                         </tr>
                     </thead>
                     <tbody id="busy-matrix-body"></tbody>
@@ -236,7 +237,7 @@
                 <table class="history-table">
                     <thead>
                         <tr>
-                            <th>Ngày</th><th>Sân + Đổ rác</th><th>Tầng trệt + NVS</th><th>Phòng học</th><th>Sân thượng</th><th>Tủ lạnh</th>
+                            <th scope="col">Ngày</th><th scope="col">Sân + Đổ rác</th><th scope="col">Tầng trệt + NVS</th><th scope="col">Phòng học</th><th scope="col">Sân thượng</th><th scope="col">Tủ lạnh</th>
                         </tr>
                     </thead>
                     <tbody id="history-table-body"></tbody>
@@ -255,7 +256,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Ngày</th><th>Sân + Đổ rác</th><th class="bg-tret-nvs">Tầng trệt + NVS</th><th>Phòng học</th><th>Sân thượng</th><th class="bg-fridge">Tủ lạnh</th>
+                            <th scope="col">Ngày</th><th scope="col">Sân + Đổ rác</th><th class="bg-tret-nvs">Tầng trệt + NVS</th><th scope="col">Phòng học</th><th scope="col">Sân thượng</th><th class="bg-fridge">Tủ lạnh</th>
                         </tr>
                     </thead>
                     <tbody id="schedule-table-body"></tbody>
@@ -273,6 +274,7 @@
             <button onclick="toggleDebug()" class="btn-warning">Mở Bảng Quản Trị / Khôi Phục JSON</button>
             <div id="debug-section">
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <button onclick="exportUnsyncedBackup()" class="btn-warning">Tải bản sửa chưa đồng bộ</button>
                     <button onclick="exportDataToFile()" class="btn-success">💾 Tải Dữ Liệu Về Máy (.json)</button>
                     <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importDataFromFile(event)">
                     <button onclick="document.getElementById('import-file').click()" class="btn-warning">📂 Tải File Lên Hệ Thống</button>
@@ -284,37 +286,23 @@
         </div>
     </div>
 
-    <div id="sync-modal" class="modal">
+    <div id="sync-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="sync-title">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeSyncModal()">&times;</span>
-            <h2 style="margin-top: 0;">🔄 Đồng Bộ Nhiều Thiết Bị</h2>
-            <div id="sync-diagnostic-banner" style="display:none; background:#fdecea; border:1px solid #f5c6cb; color:#611a15; padding:10px 12px; border-radius:6px; font-size:13px; margin-bottom:12px; line-height:1.6;"></div>
-            <p class="note">Dữ liệu mặc định chỉ lưu trên máy này (localStorage). Để nhiều iPhone cùng xem/sửa chung 1 lịch, cần kết nối tới 1 Firebase Realtime Database miễn phí (chỉ cần làm 1 lần).</p>
-
-            <ol style="font-size: 14px; line-height: 1.6;">
-                <li>Vào <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → Đăng nhập Google → <b>Add project</b> (đặt tên tuỳ ý, ví dụ <i>cuxa-lichtruc</i>) → tắt Google Analytics cho nhanh.</li>
-                <li>Trong project vừa tạo, vào mục <b>Build → Realtime Database</b> → Create Database → chọn vị trí bất kỳ → chọn chế độ <b>Start in test mode</b>.</li>
-                <li>Vào tab <b>Rules</b> của Realtime Database, dán đè:
-                    <pre style="background:#eee; padding:8px; border-radius:4px; overflow-x:auto;">{ "rules": { ".read": true, ".write": true } }</pre>
-                    rồi bấm <b>Publish</b>. (Lưu ý: cách này đơn giản, ai có link project cũng đọc/ghi được - phù hợp cho lịch trực nội bộ, không phải dữ liệu nhạy cảm.)
-                </li>
-                <li>Bấm ⚙️ (Project settings) ở góc trên trái → cuộn xuống <b>Your apps</b> → bấm icon <b>&lt;/&gt; (Web)</b> → đặt tên app → Register app.</li>
-                <li>Firebase sẽ hiện đoạn code chứa <code>const firebaseConfig = {...}</code>. Copy <b>toàn bộ đoạn đó</b> và dán vào ô bên dưới.</li>
-            </ol>
-
-            <textarea id="sync-config-input" style="height: 140px; font-size: 13px;" placeholder='Dán nguyên đoạn: const firebaseConfig = { apiKey: "...", databaseURL: "...", ... };'></textarea>
-            <div style="margin-top: 10px;">
-                <button onclick="saveSyncConfig()" class="btn-success">✅ Lưu & Kết Nối</button>
-                <button onclick="disconnectSync()" class="btn-danger">🔌 Ngắt Đồng Bộ</button>
-            </div>
-            <p class="note">Mẹo: sau khi làm xong trên 1 máy, gửi đoạn cấu hình này cho các máy khác (qua Zalo) để dán vào - hoặc nhờ mình "nướng" thẳng vào file để mọi người mở lên là tự động đồng bộ, không cần dán gì cả.</p>
+            <button type="button" class="close-btn" onclick="closeSyncModal()" aria-label="Đóng">&times;</button>
+            <h2 id="sync-title">🔄 Đồng bộ lịch trực</h2>
+            <p id="sync-detail" role="status"></p>
+            <p>Các thiết bị dùng chung một lịch. Thay đổi được lưu và cập nhật tự động khi có mạng.</p>
+            <p>Nếu hai người sửa cùng lúc, ứng dụng giữ bản lưu trước và cho tải bản sửa còn lại để đối chiếu.</p>
+            <p>Ai có đường link đều có thể xem và sửa. Hãy tải bản sao lưu trước khi nhập dữ liệu hoặc chốt tuần.</p>
+            <button onclick="reconnectSync()">Kết nối lại</button>
+            <button onclick="disconnectSync()" class="btn-history">Tạm dừng trên máy này</button>
         </div>
     </div>
 
-    <div id="penaltyModal" class="modal">
+    <div id="penaltyModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="penalty-title">
         <div class="modal-content">
-            <span class="close-btn" onclick="closePenaltyModal()">&times;</span>
-            <h2 style="color: #dc3545; margin-top: 0;">⚖️ Hồ Sơ Kỷ Luật - <span id="penalty-member-name"></span></h2>
+            <button type="button" class="close-btn" onclick="closePenaltyModal()" aria-label="Đóng">&times;</button>
+            <h2 id="penalty-title" style="color: #dc3545; margin-top: 0;">⚖️ Hồ Sơ Kỷ Luật - <span id="penalty-member-name"></span></h2>
             
             <h3>Danh sách Nợ/Phạt đang chờ:</h3>
             <div class="penalty-list" id="penalty-list-container"></div>
@@ -372,19 +360,30 @@
         // V24: Chuẩn hoá việc bóc tách tên gốc khỏi các tiền tố trạng thái (⚠️ ép buộc / ⚖️ lệch ca)
         const STATUS_PREFIXES = ["⚠️ ", "⚖️ "];
         function stripStatusPrefix(name) {
-            if (!name) return name;
+            if (typeof name !== 'string') return '';
             for (const p of STATUS_PREFIXES) { if (name.startsWith(p)) return name.slice(p.length); }
             return name;
         }
         function getStatusPrefix(name) {
-            if (!name) return "";
+            if (typeof name !== 'string') return '';
             for (const p of STATUS_PREFIXES) { if (name.startsWith(p)) return p; }
             return "";
         }
         
-        let members = JSON.parse(localStorage.getItem('cuxa_members_v22')) 
-                   || JSON.parse(localStorage.getItem('cuxa_members_v21'))
-                   || JSON.parse(localStorage.getItem('cuxa_members_v20'));
+        function readLocalJSON(key) {
+            const raw = localStorage.getItem(key);
+            if (!raw) return null;
+            try { return JSON.parse(raw); }
+            catch (error) {
+                localStorage.setItem('cuxa_invalid_' + key, raw);
+                console.error('Dữ liệu local không hợp lệ, đã giữ bản sao:', key);
+                return null;
+            }
+        }
+
+        let members = readLocalJSON('cuxa_members_v22')
+                   || readLocalJSON('cuxa_members_v21')
+                   || readLocalJSON('cuxa_members_v20');
                    
         if (!members) {
             members = defaultNames.map(name => ({
@@ -392,27 +391,107 @@
             }));
         }
 
-        members.forEach(m => {
-            if (m.extraCycle === undefined) m.extraCycle = false;
-            if (m.busyDays === undefined) m.busyDays = [];
-            if (m.isLongLeave === undefined) m.isLongLeave = false;
-            if (m.stats === undefined) m.stats = {done: 0, missed: 0};
-            if (m.stats.debtsPaid === undefined) m.stats.debtsPaid = 0;
-            m.debts.forEach(d => { if (d.frozen === undefined) d.frozen = false; });
-        });
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+        function jsArg(value) { return escapeHTML(JSON.stringify(value)); }
+        function validName(name) {
+            return typeof name === 'string' && name.trim().length > 0 && name.length <= 80;
+        }
+        function normalizeDays(value) {
+            if (value == null) return [];
+            if (!Array.isArray(value) || value.some(day => !days.includes(day))) throw new Error('Ngày không hợp lệ');
+            return [...new Set(value)];
+        }
+        function normalizeDebt(debt) {
+            if (!debt || !days.includes(debt.day) || !taskKeys.includes(debt.task)) throw new Error('Khoản nợ không hợp lệ');
+            if (debt.frozen != null && typeof debt.frozen !== 'boolean') throw new Error('Trạng thái nợ không hợp lệ');
+            return {day:debt.day, task:debt.task, frozen:debt.frozen ?? false};
+        }
+        function normalizeMembers(list) {
+            if (!Array.isArray(list) || list.length > 25) throw new Error('Danh sách thành viên không hợp lệ');
+            const names = new Set();
+            return list.map(member => {
+                if (!member || !validName(member.name) || names.has(member.name.trim().toLowerCase())) throw new Error('Tên trống, quá dài hoặc trùng nhau');
+                names.add(member.name.trim().toLowerCase());
+                const m = {...member, name:member.name.trim()};
+                if (m.debts != null && !Array.isArray(m.debts)) throw new Error('Danh sách nợ không hợp lệ');
+                m.debts = (m.debts || []).map(normalizeDebt);
+                m.busyDays = normalizeDays(m.busyDays);
+                m.stats = {...m.stats};
+                for (const key of ['done','missed','debtsPaid']) {
+                    m.stats[key] ??= 0;
+                    if (!Number.isSafeInteger(m.stats[key]) || m.stats[key] < 0) throw new Error('Số liệu phải là số nguyên không âm');
+                }
+                for (const key of ['offCycle','extraCycle','fridgeCycle','nvsCycle','isLongLeave']) {
+                    m[key] ??= false;
+                    if (typeof m[key] !== 'boolean') throw new Error('Trạng thái thành viên không hợp lệ');
+                }
+                return m;
+            });
+        }
+        function normalizeSchedule(schedule = {}) {
+            if (!schedule || typeof schedule !== 'object' || Array.isArray(schedule)) throw new Error('Lịch không hợp lệ');
+            const result = {};
+            for (const day of Object.keys(schedule)) {
+                if (!days.includes(day) || !schedule[day] || typeof schedule[day] !== 'object') throw new Error('Ngày trong lịch không hợp lệ');
+                result[day] = {};
+                for (const task of Object.keys(schedule[day])) {
+                    const cell = schedule[day][task];
+                    if (!taskKeys.includes(task) || !cell || typeof cell !== 'object') throw new Error('Ca trực không hợp lệ');
+                    if (cell.holiday === true) { result[day][task] = {holiday:true}; continue; }
+                    if (!validName(stripStatusPrefix(cell.name)) || !['pending','done','missed'].includes(cell.status || 'pending')) throw new Error('Tên hoặc trạng thái ca trực không hợp lệ');
+                    result[day][task] = {name:cell.name, isDebt:cell.isDebt === true, status:cell.status || 'pending'};
+                    if (cell.debt) result[day][task].debt = normalizeDebt(cell.debt);
+                }
+            }
+            return result;
+        }
+        function normalizeState(data) {
+            if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Dữ liệu không hợp lệ');
+            const config = data.config ?? defaultSlotsConfig;
+            if (!config || typeof config !== 'object' || Array.isArray(config)) throw new Error('Cấu hình không hợp lệ');
+            const normalizedConfig = {};
+            for (const task of taskKeys) normalizedConfig[task] = normalizeDays(config[task]);
+            if (data.archive != null && !Array.isArray(data.archive)) throw new Error('Lịch sử không hợp lệ');
+            const archive = (data.archive || []).slice(0,MAX_ARCHIVE_WEEKS).map(entry => {
+                if (!entry || typeof entry.date !== 'string') throw new Error('Lịch sử không hợp lệ');
+                return {date:entry.date, schedule:normalizeSchedule(entry.schedule)};
+            });
+            if (data.off != null && (!Array.isArray(data.off) || data.off.some(name => !validName(name)))) throw new Error('Danh sách nghỉ không hợp lệ');
+            if (data.updatedAt != null && (!Number.isSafeInteger(data.updatedAt) || data.updatedAt < 0)) throw new Error('Phiên bản không hợp lệ');
+            return {members:normalizeMembers(data.members || []), schedule:normalizeSchedule(data.schedule),
+                archive, off:data.off || [], mode:typeof data.mode === 'string' ? data.mode : 'Chưa có dữ liệu',
+                config:normalizedConfig, holidays:normalizeDays(data.holidays), updatedAt:data.updatedAt || null};
+        }
+        function returnAssignedDebts(list, schedule, shouldReturn = () => true) {
+            for (const day of days) for (const task of taskKeys) {
+                const cell = schedule[day]?.[task];
+                if (!cell?.isDebt || !shouldReturn(cell,day)) continue;
+                const member = list.find(m => m.name === stripStatusPrefix(cell.name));
+                if (member) member.debts.push(normalizeDebt(cell.debt || {day,task,frozen:false}));
+            }
+        }
+
+        try { members = normalizeMembers(members); }
+        catch (error) {
+            localStorage.setItem('cuxa_invalid_members', JSON.stringify(members));
+            console.error(error);
+            members = [];
+        }
 
         const defaultSlotsConfig = {
             'san': days, 'tret': ['Thứ 3', 'Thứ 6', 'Chủ Nhật'], 'phong': ['Thứ 4', 'Thứ 7'], 'thuong': ['Thứ 2', 'Thứ 5'], 'fridge': ['Thứ 4']
         };
-        let slotsConfig = JSON.parse(localStorage.getItem('cuxa_config_v22')) || JSON.parse(localStorage.getItem('cuxa_config_v21')) || defaultSlotsConfig;
-        let holidays = JSON.parse(localStorage.getItem('cuxa_holidays_v22')) || JSON.parse(localStorage.getItem('cuxa_holidays_v21')) || []; 
-        let currentSchedule = JSON.parse(localStorage.getItem('cuxa_schedule_v22')) || JSON.parse(localStorage.getItem('cuxa_schedule_v21')) || {};
-        let currentOff = JSON.parse(localStorage.getItem('cuxa_off_v22')) || JSON.parse(localStorage.getItem('cuxa_off_v21')) || [];
-        let historySchedule = JSON.parse(localStorage.getItem('cuxa_history_v22')) || JSON.parse(localStorage.getItem('cuxa_history_v21')) || {};
+        let slotsConfig = readLocalJSON('cuxa_config_v22') || readLocalJSON('cuxa_config_v21') || defaultSlotsConfig;
+        let holidays = readLocalJSON('cuxa_holidays_v22') || readLocalJSON('cuxa_holidays_v21') || [];
+        let currentSchedule = readLocalJSON('cuxa_schedule_v22') || readLocalJSON('cuxa_schedule_v21') || {};
+        let currentOff = readLocalJSON('cuxa_off_v22') || readLocalJSON('cuxa_off_v21') || [];
+        let historySchedule = readLocalJSON('cuxa_history_v22') || readLocalJSON('cuxa_history_v21') || {};
         let weekModeText = localStorage.getItem('cuxa_mode_v22') || localStorage.getItem('cuxa_mode_v21') || "Chưa có dữ liệu";
 
         // V23: Lưu trữ nhiều tuần lịch sử (thay vì chỉ 1 tuần trước)
-        let historyArchive = JSON.parse(localStorage.getItem('cuxa_archive_v23')) || [];
+        let historyArchive = readLocalJSON('cuxa_archive_v23') || [];
         const MAX_ARCHIVE_WEEKS = 20;
         // Chuyển dữ liệu lịch sử cũ (chỉ 1 tuần) vào kho lưu trữ mới nếu chưa có gì
         if (historyArchive.length === 0 && historySchedule && Object.keys(historySchedule).length > 0) {
@@ -423,25 +502,25 @@
         let currentPenaltyMember = null;
         let showScoreColumn = false;
 
-        // ================= V25: ĐỒNG BỘ NHIỀU THIẾT BỊ (Firebase Realtime Database) =================
-        // Nếu HARDCODED_FIREBASE_CONFIG được điền sẵn (baked vào file), MỌI máy mở cùng file này sẽ
-        // tự động đồng bộ, không cần cài đặt gì thêm. Nếu để null, mỗi máy có thể tự dán cấu hình riêng
-        // qua nút "Đồng Bộ" (lưu trong localStorage của máy đó).
-        // V29: Tắt đồng bộ theo yêu cầu - quay về dùng local-only (localStorage) trên từng máy.
-        // Config cũ (project lichtruc-fc561) giữ lại dạng comment, muốn bật lại chỉ cần bỏ comment:
-        // const HARDCODED_FIREBASE_CONFIG = {
-        //     apiKey: "AIzaSyASRFlnmv6qs4m2tGC27LrPNGtvruugolQ",
-        //     authDomain: "lichtruc-fc561.firebaseapp.com",
-        //     databaseURL: "https://lichtruc-fc561-default-rtdb.firebaseio.com",
-        //     projectId: "lichtruc-fc561",
-        //     storageBucket: "lichtruc-fc561.firebasestorage.app",
-        //     messagingSenderId: "815752278757",
-        //     appId: "1:815752278757:web:b221e267932e8924c15a0c",
-        //     measurementId: "G-W528748W95"
-        // };
-        const HARDCODED_FIREBASE_CONFIG = null;
-        let firebaseConfig = HARDCODED_FIREBASE_CONFIG || JSON.parse(localStorage.getItem('cuxa_firebase_config') || 'null');
+        // Cấu hình Web Firebase công khai; quyền truy cập do Database Rules quyết định.
+        const HARDCODED_FIREBASE_CONFIG = {
+            apiKey: "AIzaSyASRFlnmv6qs4m2tGC27LrPNGtvruugolQ",
+            authDomain: "lichtruc-fc561.firebaseapp.com",
+            databaseURL: "https://lichtruc-fc561-default-rtdb.firebaseio.com",
+            projectId: "lichtruc-fc561",
+            appId: "1:815752278757:web:b221e267932e8924c15a0c"
+        };
+        let firebaseConfig = HARDCODED_FIREBASE_CONFIG || readLocalJSON('cuxa_firebase_config');
         let syncEnabled = false;
+        let syncReady = false;
+        let syncSaving = false;
+        let syncConnected = false;
+        let connectionRef = null;
+
+        function lockSyncControls(locked) {
+            document.querySelector('.container').inert = locked;
+            document.getElementById('penaltyModal').inert = locked;
+        }
         let dbRef = null;
         let syncStatus = 'off'; // off | connecting | online | pending | error
         let pendingRemoteData = null;
@@ -449,17 +528,20 @@
 
         function updateSyncStatusUI(status) {
             syncStatus = status;
+            document.getElementById('backup-warning').hidden = !listUnsyncedBackups().length;
+            lockSyncControls(status === 'connecting' || status === 'saving');
             let el = document.getElementById('sync-badge');
             if (!el) return;
             const map = {
                 off:        { icon: '⚪', text: 'Chưa bật đồng bộ', color: '#888' },
                 connecting: { icon: '🟡', text: 'Đang kết nối...', color: '#f9a825' },
+                saving:     { icon: '🟡', text: 'Đang lưu online...', color: '#f9a825' },
                 online:     { icon: '🟢', text: 'Đã đồng bộ', color: '#2e7d32' },
                 pending:    { icon: '🟠', text: 'Có bản mới (tắt Sửa để nhận)', color: '#ef6c00' },
                 error:      { icon: '🔴', text: 'Lỗi đồng bộ', color: '#c62828' }
             };
             let s = map[status] || map.off;
-            el.innerHTML = `${s.icon} ${s.text}`;
+            el.textContent = `${s.icon} ${s.text}`;
             el.style.color = s.color;
             let timeEl = document.getElementById('sync-time');
             if (timeEl) {
@@ -471,19 +553,24 @@
         let lastSyncedUpdatedAt = null;
 
         function applyRemoteState(remote) {
+            // Kiểm tra toàn bộ trước khi thay dữ liệu đang dùng.
+            const data = normalizeState(remote);
             isApplyingRemote = true;
-            members = remote.members || members;
-            currentSchedule = remote.schedule || {};
-            historyArchive = remote.archive || [];
-            currentOff = remote.off || [];
-            weekModeText = remote.mode || weekModeText;
-            slotsConfig = remote.config || slotsConfig;
-            holidays = remote.holidays || [];
-            historySchedule = historyArchive[0] ? historyArchive[0].schedule : {};
-            lastSyncedUpdatedAt = remote.updatedAt || Date.now();
-            persistLocal();
-            renderUI();
-            isApplyingRemote = false;
+            try {
+                members = data.members;
+                currentSchedule = data.schedule;
+                historyArchive = data.archive;
+                currentOff = data.off;
+                weekModeText = data.mode;
+                slotsConfig = data.config;
+                holidays = data.holidays;
+                historySchedule = historyArchive[0]?.schedule || {};
+                lastSyncedUpdatedAt = data.updatedAt;
+                if (currentPenaltyMember && !members.some(m => m.name === currentPenaltyMember)) closePenaltyModal();
+                persistLocal();
+                renderUI();
+                if (currentPenaltyMember) openPenaltyModal(currentPenaltyMember);
+            } finally { isApplyingRemote = false; }
         }
 
         // V26: Kiểm tra xem có ai vừa cập nhật server sau lần mình xem gần nhất không, để tránh
@@ -504,10 +591,19 @@
         function initFirebaseSync() {
             if (!firebaseConfig) { updateSyncStatusUI('off'); return; }
             try {
+                if (dbRef) dbRef.off();
+                if (connectionRef) connectionRef.off();
                 if (!firebase.apps || !firebase.apps.length) firebase.initializeApp(firebaseConfig);
                 dbRef = firebase.database().ref('cuxa_data');
                 syncEnabled = true;
+                syncReady = false;
                 updateSyncStatusUI('connecting');
+                connectionRef = firebase.database().ref('.info/connected');
+                connectionRef.on('value', snapshot => {
+                    syncConnected = snapshot.val() === true;
+                    if (!syncConnected && syncReady) updateSyncStatusUI('error');
+                    else if (syncConnected && syncReady && !syncSaving) updateSyncStatusUI(isEditMode && pendingRemoteData ? 'pending' : 'online');
+                });
 
                 // V28: Nếu sau 10 giây vẫn chưa nhận được phản hồi nào từ server (kẹt ở "Đang kết nối"),
                 // báo lỗi rõ ràng thay vì treo vô thời hạn - để người dùng biết mà kiểm tra Rules/mạng/URL.
@@ -522,10 +618,14 @@
                 dbRef.on('value', (snapshot) => {
                     gotFirstResponse = true;
                     let remote = snapshot.val();
+                    try { if (remote) normalizeState(remote); }
+                    catch (error) { console.error(error); syncReady = false; updateSyncStatusUI('error'); return; }
+                    syncReady = true;
+                    if (syncSaving) { pendingRemoteData = remote; return; }
                     if (!remote) { updateSyncStatusUI('online'); return; } // Chưa có gì trên server, lần lưu đầu sẽ đẩy lên
                     // V27: Chặn dữ liệu CŨ (đến trễ do độ trễ mạng) đè lên dữ liệu MỚI mình vừa lưu -
                     // đây là nguyên nhân gây mất dữ liệu khi thao tác ngay lúc đang "Đang kết nối...".
-                    if (remote.updatedAt && lastSyncedUpdatedAt && remote.updatedAt < lastSyncedUpdatedAt) {
+                    if (remote.updatedAt && lastSyncedUpdatedAt && remote.updatedAt <= lastSyncedUpdatedAt) {
                         return; // dữ liệu này cũ hơn cái mình đang có, bỏ qua, không áp dụng
                     }
                     if (isEditMode) { pendingRemoteData = remote; updateSyncStatusUI('pending'); return; }
@@ -545,47 +645,27 @@
         }
 
         function openSyncModal() {
-            document.getElementById('sync-config-input').value = firebaseConfig ? JSON.stringify(firebaseConfig, null, 2) : '';
-            let banner = document.getElementById('sync-diagnostic-banner');
-            if (syncStatus === 'error') {
-                banner.style.display = 'block';
-                banner.innerHTML = `⚠️ <b>Đang lỗi kết nối / kẹt "Đang kết nối" quá 10 giây.</b> Kiểm tra theo thứ tự:<br>
-                    1. Đang dùng WiFi hay 4G? Thử đổi sang mạng khác xem có đỡ không (vài mạng di động chặn kết nối realtime).<br>
-                    2. Vào Firebase Console → Realtime Database → tab <b>Rules</b> → chắc chắn đã bấm <b>Publish</b> (không chỉ gõ chữ mà chưa lưu).<br>
-                    3. So sánh <code>databaseURL</code> ở khung dưới với đúng URL hiển thị đầu trang <b>Data</b> trong Firebase Console - phải khớp 100%.`;
-            } else {
-                banner.style.display = 'none';
-            }
+            document.getElementById('sync-detail').textContent = document.getElementById('sync-badge').textContent;
             document.getElementById('sync-modal').style.display = 'block';
         }
         function closeSyncModal() { document.getElementById('sync-modal').style.display = 'none'; }
-
-        function saveSyncConfig() {
-            let raw = document.getElementById('sync-config-input').value.trim();
-            if (!raw) return alert("Vui lòng dán cấu hình Firebase vào ô trên!");
-            try {
-                // Cho phép dán nguyên đoạn "const firebaseConfig = {...};" hoặc chỉ phần {...}
-                let match = raw.match(/\{[\s\S]*\}/);
-                if (!match) throw new Error("Không tìm thấy object cấu hình hợp lệ");
-                let cfg = new Function('return ' + match[0])();
-                if (!cfg.databaseURL) return alert("⚠️ Cấu hình thiếu 'databaseURL'. Hãy chắc chắn bạn đã tạo Realtime Database (không phải chỉ Firestore) và copy đúng đoạn cấu hình Web App.");
-                firebaseConfig = cfg;
-                localStorage.setItem('cuxa_firebase_config', JSON.stringify(cfg));
-                closeSyncModal();
-                initFirebaseSync();
-                alert("✅ Đã lưu cấu hình! Đang kết nối đồng bộ...");
-            } catch (e) {
-                alert("❌ Cấu hình không hợp lệ, vui lòng copy nguyên văn đoạn firebaseConfig từ Firebase Console. Lỗi: " + e.message);
-            }
+        function reconnectSync() {
+            if (syncSaving) return alert('Hãy chờ lưu xong trước khi kết nối lại.');
+            firebaseConfig = HARDCODED_FIREBASE_CONFIG;
+            closeSyncModal();
+            initFirebaseSync();
         }
 
         function disconnectSync() {
+            if (!canEdit()) return;
             if (HARDCODED_FIREBASE_CONFIG) {
                 if (!confirm("Lưu ý: file này đã được nướng sẵn cấu hình đồng bộ chung của cả cư xá, nên nếu tải lại trang sẽ tự kết nối lại. Chỉ tắt tạm trong phiên này thôi, vẫn muốn tắt chứ?")) return;
             } else if (!confirm("Ngắt đồng bộ trên máy này? Dữ liệu vẫn được lưu offline bình thường, chỉ là không còn tự cập nhật giữa các máy nữa.")) return;
             firebaseConfig = null;
             localStorage.removeItem('cuxa_firebase_config');
             if (dbRef) dbRef.off();
+            if (connectionRef) connectionRef.off();
+            syncReady = false; syncConnected = false;
             syncEnabled = false; dbRef = null;
             updateSyncStatusUI('off');
             closeSyncModal();
@@ -603,28 +683,110 @@
             localStorage.setItem('cuxa_archive_v23', JSON.stringify(historyArchive));
         }
 
-        function saveData() {
-            persistLocal();
-            if (syncEnabled && dbRef && !isApplyingRemote) {
-                let ts = Date.now();
-                // V27: Đánh dấu mốc NGAY (không chờ server xác nhận) để mọi bản dữ liệu cũ đến trễ
-                // (do độ trễ mạng, đặc biệt lúc mới mở trang còn "Đang kết nối") đều bị nhận ra là cũ và bỏ qua.
-                lastSyncedUpdatedAt = ts;
-                dbRef.set({
-                    members, schedule: currentSchedule, archive: historyArchive, off: currentOff,
-                    mode: weekModeText, config: slotsConfig, holidays, updatedAt: ts
-                }).then(() => { updateSyncStatusUI('online'); })
-                  .catch(err => { console.error(err); updateSyncStatusUI('error'); });
+        function listUnsyncedBackups() {
+            const archive = readLocalJSON('cuxa_unsynced_archive') || [];
+            const current = localStorage.getItem('cuxa_unsynced_backup');
+            return [...archive, ...(current ? [current] : [])];
+        }
+        function rememberUnsyncedBackup(data) {
+            const previous = localStorage.getItem('cuxa_unsynced_backup');
+            const next = JSON.stringify(data);
+            if (previous && previous !== next) {
+                const archive = readLocalJSON('cuxa_unsynced_archive') || [];
+                if (!archive.includes(previous)) {
+                    archive.push(previous);
+                    localStorage.setItem('cuxa_unsynced_archive', JSON.stringify(archive));
+                }
             }
+            localStorage.setItem('cuxa_unsynced_backup', next);
+        }
+
+        async function saveData() {
+            persistLocal();
             renderUI();
+            if (isApplyingRemote) return false;
+            if (!syncEnabled || !dbRef) return true;
+            const data = JSON.parse(JSON.stringify({
+                members, schedule: currentSchedule, archive: historyArchive, off: currentOff,
+                mode: weekModeText, config: {...slotsConfig, initialized:true}, holidays
+            }));
+            if (!syncReady || !syncConnected || syncSaving) {
+                rememberUnsyncedBackup(data);
+                updateSyncStatusUI('error');
+                alert('Chưa lưu online: đang kết nối. Bản sửa đã được giữ trên máy; hãy tải file sao lưu trước khi tải lại trang.');
+                return false;
+            }
+            const baseVersion = lastSyncedUpdatedAt;
+            data.updatedAt = Math.max(Date.now(), (baseVersion || 0) + 1);
+            // Giữ bản sửa để khôi phục nếu mất mạng hoặc có máy khác lưu trước.
+            rememberUnsyncedBackup(data);
+            syncSaving = true;
+            pendingRemoteData = null;
+            updateSyncStatusUI('saving');
+            try {
+                const result = await dbRef.transaction(remote => {
+                    if ((remote && remote.updatedAt || null) !== baseVersion) return;
+                    return data;
+                }, undefined, false);
+                if (result.committed) {
+                    lastSyncedUpdatedAt = data.updatedAt;
+                    localStorage.removeItem('cuxa_unsynced_backup');
+                    updateSyncStatusUI('online');
+                    return true;
+                } else {
+                    if (result.snapshot.val()) applyRemoteState(result.snapshot.val());
+                    updateSyncStatusUI('online');
+                    alert('Có máy khác vừa lưu trước. Đã tải bản mới nhất để tránh ghi đè. Bản sửa của bạn vẫn nằm trong mục Tải bản sửa chưa đồng bộ.');
+                    return false;
+                }
+            } catch (err) {
+                console.error(err);
+                updateSyncStatusUI('error');
+                alert('Chưa lưu được online. Bản sửa vẫn được giữ trên máy; hãy tải bản sửa chưa đồng bộ để sao lưu.');
+                return false;
+            } finally {
+                syncSaving = false;
+                if (pendingRemoteData && pendingRemoteData.updatedAt > lastSyncedUpdatedAt) {
+                    if (!isEditMode) applyPendingRemoteIfAny();
+                    else updateSyncStatusUI('pending');
+                } else pendingRemoteData = null;
+            }
+        }
+
+        function exportUnsyncedBackup() {
+            const backups = listUnsyncedBackups();
+            if (!backups.length) return alert('Không có bản sửa chưa đồng bộ.');
+            const answer = backups.length === 1 ? '1' : prompt('Có ' + backups.length + ' bản sửa. Nhập số từ 1 (cũ nhất) đến ' + backups.length + ' (mới nhất):', String(backups.length));
+            if (answer === null) return;
+            const index = Number(answer) - 1;
+            if (!Number.isInteger(index) || !backups[index]) return alert('Số bản sao lưu không hợp lệ.');
+            const backup = backups[index];
+            const data = JSON.parse(backup);
+            // Dùng định dạng nhập/xuất hiện có của ứng dụng.
+            const file = data;
+            const url = URL.createObjectURL(new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'lich-truc-chua-dong-bo.json';
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
 
         function toggleScoreColumn() { showScoreColumn = !showScoreColumn; renderUI(); }
 
+        function canEdit() {
+            if (syncSaving || (syncEnabled && (!syncReady || !syncConnected))) {
+                alert('Chưa thể sửa: hãy chờ kết nối và lưu online hoàn tất. Bạn vẫn có thể tải bản sao lưu.');
+                return false;
+            }
+            return true;
+        }
+
         function addMember() {
+            if (!canEdit()) return;
             let input = document.getElementById('new-member-name');
             let name = input.value.trim();
-            if (!name) return alert("Vui lòng nhập tên!");
+            if (!validName(name)) return alert("Tên phải có từ 1 đến 80 ký tự!");
             if (members.length >= 25) return alert("Hỗ trợ tối đa 25 người!");
             if (members.find(m => m.name.toLowerCase() === name.toLowerCase())) return alert("Tên này đã tồn tại!");
             members.push({ name: name, debts: [], offCycle: false, extraCycle: false, fridgeCycle: false, nvsCycle: false, busyDays: [], isLongLeave: false, stats: {done: 0, missed: 0, debtsPaid: 0} });
@@ -632,17 +794,25 @@
         }
 
         function removeMember(name) {
+            if (!canEdit()) return;
             if (confirm(`⚠️ Chắc chắn XÓA [${name}]? Dữ liệu của người này sẽ mất.`)) {
+                for (const day of days) for (const task of taskKeys) {
+                    if (stripStatusPrefix(currentSchedule[day]?.[task]?.name) === name) delete currentSchedule[day][task];
+                }
+                currentOff = currentOff.filter(person => person !== name);
+                if (currentPenaltyMember === name) closePenaltyModal();
                 members = members.filter(m => m.name !== name); saveData();
             }
         }
 
         // V23: Đổi tên thành viên mà vẫn giữ nguyên nợ/điểm/lịch sử đã có
         function renameMember(oldName) {
+            if (!canEdit()) return;
             let newName = prompt(`Đổi tên "${oldName}" thành:`, oldName);
             if (newName === null) return;
             newName = newName.trim();
-            if (!newName || newName === oldName) return;
+            if (newName === oldName) return;
+            if (!validName(newName)) return alert("Tên phải có từ 1 đến 80 ký tự!");
             if (members.some(m => m.name !== oldName && m.name.toLowerCase() === newName.toLowerCase())) return alert("Tên này đã tồn tại!");
 
             let m = members.find(x => x.name === oldName);
@@ -662,10 +832,14 @@
                     if (entry.schedule[day]) taskKeys.forEach(task => swapName(entry.schedule[day][task]));
                 });
             });
+            currentOff = currentOff.map(name => name === oldName ? newName : name);
+            days.forEach(day => { if (historySchedule[day]) taskKeys.forEach(task => swapName(historySchedule[day][task])); });
+            if (currentPenaltyMember === oldName) currentPenaltyMember = newName;
             saveData();
         }
 
         function toggleConfigSlot(task, day) {
+            if (!canEdit()) return;
             if(!slotsConfig[task]) slotsConfig[task] = [];
             if(slotsConfig[task].includes(day)) slotsConfig[task] = slotsConfig[task].filter(d => d !== day);
             else slotsConfig[task].push(day);
@@ -673,17 +847,20 @@
         }
 
         function toggleHoliday(day) {
+            if (!canEdit()) return;
             if(holidays.includes(day)) holidays = holidays.filter(d => d !== day);
             else holidays.push(day);
             saveData();
         }
 
         function toggleAllHolidays() {
+            if (!canEdit()) return;
             if(holidays.length === 7) holidays = []; else holidays = [...days]; 
             saveData();
         }
 
         function toggleBusy(name, day) {
+            if (!canEdit()) return;
             let m = members.find(x => x.name === name);
             if (!m || m.isLongLeave) return; 
             if (!m.busyDays) m.busyDays = [];
@@ -693,6 +870,7 @@
         }
 
         function toggleLongLeave(name) {
+            if (!canEdit()) return;
             let m = members.find(x => x.name === name);
             if (!m) return;
             m.isLongLeave = !m.isLongLeave;
@@ -701,6 +879,7 @@
         }
 
         function toggleEditMode() {
+            if (!canEdit()) return;
             isEditMode = !isEditMode;
             let btn = document.getElementById('btn-edit-mode');
             let statsBar = document.getElementById('live-stats-bar');
@@ -731,20 +910,27 @@
 
         function updateLiveStats() {
             if(!isEditMode) return;
-            let counts = {};
+            let counts = Object.create(null);
             members.forEach(m => counts[m.name] = getShiftCount(m.name));
             
             let html = '';
             members.filter(m => !m.isLongLeave).forEach(m => {
                 let color = counts[m.name] === 0 ? '#ffcdd2' : (counts[m.name] > 1 ? '#c8e6c9' : 'white');
-                html += `<div class="live-stat-item" style="background: ${color}">${m.name}: ${counts[m.name]} ca</div>`;
+                html += `<div class="live-stat-item" style="background: ${color}">${escapeHTML(m.name)}: ${counts[m.name]} ca</div>`;
             });
             document.getElementById('live-stats-content').innerHTML = html;
         }
 
         // 🔥 HÀM ĐỒNG BỘ 2 CHIỀU KHI SỬA THỦ CÔNG
         function manualChangeCell(day, task, selectElem) {
+            if (!canEdit()) return;
             let newName = selectElem.value;
+            const selectedMember = members.find(m => m.name === newName);
+            if (newName !== '---' && (!selectedMember || selectedMember.isLongLeave)) { renderUI(); return; }
+            if (newName !== '---' && Object.entries(currentSchedule[day] || {}).some(([key,cell]) => key !== task && stripStatusPrefix(cell.name) === newName)) {
+                alert('Người này đã có một ca trong ngày. Hãy chọn người khác.'); renderUI(); return;
+            }
+            if (selectedMember?.busyDays.includes(day) && !confirm('Người này đã báo bận. Bạn vẫn muốn xếp ca này?')) { renderUI(); return; }
             let oldCell = currentSchedule[day] ? currentSchedule[day][task] : null;
             let oldRawName = null;
 
@@ -754,7 +940,7 @@
                 if (oldCell.isDebt) {
                     let mOld = members.find(x => x.name === oldRawName);
                     // Bơm lại nợ vào danh sách chờ
-                    if (mOld) mOld.debts.push({day: day, task: task, frozen: false});
+                    if (mOld) mOld.debts.push(normalizeDebt(oldCell.debt || {day,task,frozen:false}));
                 }
             }
 
@@ -765,28 +951,20 @@
                 if(!currentSchedule[day]) currentSchedule[day] = {};
                 let mNew = members.find(x => x.name === newName);
                 let isDebt = false;
+                let assignedDebt;
 
                 // Tìm xem người này có đang nợ công việc này không (bỏ qua frozen)
                 let debtIdx = mNew.debts.findIndex(d => d.task === task && !d.frozen);
                 if (debtIdx !== -1) {
                     isDebt = true;
                     // 🔥 XÓA NỢ TỨC THÌ
-                    mNew.debts.splice(debtIdx, 1);
+                    assignedDebt = mNew.debts.splice(debtIdx, 1)[0];
                 }
                 
-                currentSchedule[day][task] = { name: newName, isDebt: isDebt, status: 'pending' };
+                currentSchedule[day][task] = { name: newName, isDebt: isDebt, status: 'pending', ...(assignedDebt ? {debt:assignedDebt} : {}) };
             }
 
-            // V35: Tính lại "Đã Gánh Ca?" cho CẢ người cũ lẫn người mới dựa trên số ca THỰC TẾ sau khi sửa -
-            // trước đây chỉ tự BẬT khi >=2 ca mà không bao giờ tự TẮT lại nếu sau đó rút bớt ca, khiến cờ
-            // này bị kẹt sai (người không còn gánh ca nào vẫn bị đánh dấu "Đã Gánh Ca" mãi mãi).
-            if (oldRawName && oldRawName !== newName) {
-                let mOld = members.find(x => x.name === oldRawName);
-                if (mOld) mOld.extraCycle = getShiftCount(oldRawName) >= 2;
-            }
-            if (newName !== "---") {
-                members.find(x => x.name === newName).extraCycle = getShiftCount(newName) >= 2;
-            }
+            // Chỉ ghi nhận lượt nghỉ/gánh ca khi chốt tuần, tránh tiêu lượt khi sửa/xếp lại.
 
             saveData(); // Gọi renderUI() để thẻ (Nợ) hoặc Gánh Ca tự động biến mất/xuất hiện ngay lập tức
             updateLiveStats();
@@ -812,7 +990,7 @@
                 
                 lbHtml += `<tr>
                     <td><span class="medal-icon">${medal}</span></td>
-                    <td><b>${m.name}</b></td>
+                    <td><b>${escapeHTML(m.name)}</b></td>
                     <td style="color: green; font-weight: bold;">${m.stats.done}</td>
                     <td style="color: #d32f2f; font-weight: bold;">${m.stats.missed}</td>
                     <td style="color: #f57f17; font-weight: bold;">${m.debts.length}</td>
@@ -831,7 +1009,7 @@
             const tbody = document.getElementById('member-table-body');
             tbody.innerHTML = '';
             members.forEach(m => {
-                let nameHtml = m.name;
+                let nameHtml = escapeHTML(m.name);
                 if(m.isLongLeave) nameHtml += ' <span class="long-leave-badge">VẮNG</span>';
                 let activeDebts = m.debts.filter(d => !d.frozen).length;
                 if (activeDebts === 1 && !m.isLongLeave) nameHtml += ' <span class="missed">*</span>';
@@ -859,9 +1037,9 @@
                         <td>${m.fridgeCycle ? '✔️' : '-'}</td>
                         <td>${m.nvsCycle ? '✔️' : '-'}</td>
                         <td>
-                            <button onclick="renameMember('${m.name}')" class="btn-edit" style="margin:0; padding: 5px 10px;">✏️ Đổi tên</button>
-                            <button onclick="openPenaltyModal('${m.name}')" class="btn-warning" style="margin:0; padding: 5px 10px;">⚖️ Án Phạt</button>
-                            <button onclick="removeMember('${m.name}')" class="btn-danger" style="margin:0; padding: 5px 10px;">Xóa</button>
+                            <button onclick="renameMember(${jsArg(m.name)})" class="btn-edit" style="margin:0; padding: 5px 10px;">✏️ Đổi tên</button>
+                            <button onclick="openPenaltyModal(${jsArg(m.name)})" class="btn-warning" style="margin:0; padding: 5px 10px;">⚖️ Án Phạt</button>
+                            <button onclick="removeMember(${jsArg(m.name)})" class="btn-danger" style="margin:0; padding: 5px 10px;">Xóa</button>
                         </td>
                     </tr>`;
             });
@@ -873,7 +1051,7 @@
                 let tr = `<tr><td>${taskNamesMap[task]}</td>`;
                 days.forEach(day => {
                     let isChecked = (slotsConfig[task] && slotsConfig[task].includes(day)) ? 'checked' : '';
-                    tr += `<td><input type="checkbox" onchange="toggleConfigSlot('${task}', '${day}')" ${isChecked}></td>`;
+                    tr += `<td><input type="checkbox" aria-label="${taskNamesMap[task]}: ${day}" onchange="toggleConfigSlot('${task}', '${day}')" ${isChecked}></td>`;
                 });
                 tr += `</tr>`;
                 configBody.innerHTML += tr;
@@ -889,12 +1067,12 @@
             const matrixBody = document.getElementById('busy-matrix-body');
             matrixBody.innerHTML = '';
             members.forEach(m => {
-                let tr = `<tr style="${m.isLongLeave ? 'background-color: #ffebee;' : ''}"><td>${m.name}</td>`;
-                tr += `<td style="background-color: #ffcdd2;"><input type="checkbox" onchange="toggleLongLeave('${m.name}')" ${m.isLongLeave ? 'checked' : ''}></td>`;
+                let tr = `<tr style="${m.isLongLeave ? 'background-color: #ffebee;' : ''}"><td>${escapeHTML(m.name)}</td>`;
+                tr += `<td style="background-color: #ffcdd2;"><input type="checkbox" aria-label="Nghỉ dài hạn: ${escapeHTML(m.name)}" onchange="toggleLongLeave(${jsArg(m.name)})" ${m.isLongLeave ? 'checked' : ''}></td>`;
                 let disabledAttr = m.isLongLeave ? 'disabled class="disabled-checkbox"' : '';
                 days.forEach(day => {
                     let isChecked = (m.busyDays && m.busyDays.includes(day)) ? 'checked' : '';
-                    tr += `<td><input type="checkbox" onchange="toggleBusy('${m.name}', '${day}')" ${isChecked} ${disabledAttr}></td>`;
+                    tr += `<td><input type="checkbox" aria-label="Lịch bận ${escapeHTML(m.name)}: ${day}" onchange="toggleBusy(${jsArg(m.name)}, '${day}')" ${isChecked} ${disabledAttr}></td>`;
                 });
                 tr += `</tr>`;
                 matrixBody.innerHTML += tr;
@@ -922,7 +1100,7 @@
                             let warnClass = isBusy ? 'busy-warn' : '';
                             let bgColor = !isSlotActive ? 'background-color: #fffde7;' : ''; 
                             
-                            let selectHtml = `<select class="manual-select ${warnClass}" onchange="manualChangeCell('${day}', '${task}', this)">`;
+                            let selectHtml = `<select aria-label="${day}: ${taskNamesMap[task]}" class="manual-select ${warnClass}" onchange="manualChangeCell('${day}', '${task}', this)">`;
                             selectHtml += `<option value="---">-- Trống --</option>`;
                             members.forEach(m => {
                                 let rawCellName = cellData ? stripStatusPrefix(cellData.name) : "";
@@ -932,7 +1110,7 @@
                                 if(m.busyDays.includes(day)) label += " (Bận)";
                                 // Chỉ hiện "Nợ" nếu họ nợ việc này và nợ đó chưa bị đóng băng
                                 if(m.debts.some(d => d.task === task && !d.frozen)) label += " (Nợ)";
-                                selectHtml += `<option value="${m.name}" ${selected}>${label}</option>`;
+                                selectHtml += `<option value="${escapeHTML(m.name)}" ${selected}>${escapeHTML(label)}</option>`;
                             });
                             selectHtml += `</select>`;
                             
@@ -946,7 +1124,7 @@
                         } else {
                             if (cellData) {
                                 let statusClass = cellData.status === 'done' ? 'status-done' : (cellData.status === 'missed' ? 'status-missed' : '');
-                                let display = cellData.name + (cellData.isDebt ? '<span class="missed"> (Bù/Phạt)</span>' : '');
+                                let display = escapeHTML(cellData.name) + (cellData.isDebt ? '<span class="missed"> (Bù/Phạt)</span>' : '');
                                 row += `<td class="checkbox-cell ${statusClass}" onclick="toggleStatus('${day}', '${task}')">${display}</td>`;
                             } else {
                                 row += `<td class="empty-cell"></td>`;
@@ -963,7 +1141,7 @@
             renderHistoryTable();
 
             document.getElementById('capture-title').innerText = "Lịch tuần này - " + new Date().toLocaleDateString('vi-VN');
-            document.getElementById('off-list').innerHTML = weekModeText;
+            document.getElementById('off-list').textContent = weekModeText.replace(/<[^>]*>/g, '');
             document.getElementById('debug-json').value = JSON.stringify(members, null, 4);
         }
 
@@ -978,7 +1156,7 @@
             }
             historyArchive.forEach((entry, idx) => {
                 let label = idx === 0 ? `🆕 Gần nhất - ${entry.date}` : entry.date;
-                sel.innerHTML += `<option value="${idx}">${label}</option>`;
+                sel.innerHTML += `<option value="${idx}">${escapeHTML(label)}</option>`;
             });
             // Giữ lựa chọn cũ nếu còn hợp lệ, không thì mặc định tuần gần nhất
             if (prevValue && Number(prevValue) < historyArchive.length) sel.value = prevValue;
@@ -1003,7 +1181,7 @@
                     if (cellData && cellData.holiday) { row += `<td class="empty-cell" style="color: #00838f;">Nghỉ Lễ</td>`; } 
                     else if (cellData) {
                         let statusClass = cellData.status === 'done' ? 'status-done' : (cellData.status === 'missed' ? 'status-missed' : '');
-                        let display = cellData.name + (cellData.isDebt ? '<span class="missed"> (Bù/Phạt)</span>' : '');
+                        let display = escapeHTML(cellData.name) + (cellData.isDebt ? '<span class="missed"> (Bù/Phạt)</span>' : '');
                         row += `<td class="${statusClass}">${display}</td>`;
                     } else { row += `<td class="empty-cell"></td>`; }
                 });
@@ -1015,6 +1193,7 @@
         // --- CÁC HÀM TIỆN ÍCH ---
         function toggleLeaderboard() { let s = document.getElementById('lb-content'); s.style.display = (s.style.display === 'none') ? 'block' : 'none'; }
         function toggleStatus(day, task) {
+            if (!canEdit()) return;
             if(isEditMode || holidays.includes(day)) return; 
             if(!currentSchedule[day] || !currentSchedule[day][task]) return; 
             let current = currentSchedule[day][task].status;
@@ -1027,18 +1206,11 @@
         function toggleConfig() { let s = document.getElementById('config-section'); s.style.display = (s.style.display === 'none' || s.style.display === '') ? 'block' : 'none'; }
         function toggleDebug() { let s = document.getElementById('debug-section'); s.style.display = (s.style.display === 'none' || s.style.display === '') ? 'block' : 'none'; }
 
-        function applyDebug() {
+        async function applyDebug() {
+            if (!canEdit()) return;
             try {
-                members = JSON.parse(document.getElementById('debug-json').value);
-                members.forEach(m => {
-                    if (m.extraCycle === undefined) m.extraCycle = false;
-                    if (m.busyDays === undefined) m.busyDays = [];
-                    if (m.isLongLeave === undefined) m.isLongLeave = false;
-                    if (m.stats === undefined) m.stats = {done: 0, missed: 0};
-                    if (m.stats.debtsPaid === undefined) m.stats.debtsPaid = 0;
-                    m.debts.forEach(d => { if (d.frozen === undefined) d.frozen = false; });
-                });
-                saveData(); alert("Đã áp dụng dữ liệu!");
+                members = normalizeMembers(JSON.parse(document.getElementById('debug-json').value));
+                if (await saveData()) alert("Đã áp dụng dữ liệu!");
             } catch (e) { alert("Lỗi cấu trúc JSON!"); }
         }
 
@@ -1145,7 +1317,7 @@
                     let content = '—', badge = '';
                     if (holidays.includes(day)) content = 'Nghỉ Lễ';
                     else if (cell) {
-                        content = stripStatusPrefix(cell.name);
+                        content = escapeHTML(stripStatusPrefix(cell.name));
                         if (cell.isDebt) badge = `<span style="position:absolute; top:4px; right:6px; width:9px; height:9px; border-radius:50%; background:#e53935; border:1.5px solid white;"></span>`;
                     }
                     return `<td style="position:relative; padding:15px 6px; text-align:center; font-weight:700; color:#1a237e; background:${s.bodyBg}; border-radius:12px;">${content}${badge}</td>`;
@@ -1245,17 +1417,16 @@
             let file = event.target.files[0];
             if (!file) return;
             let reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
+                if (!canEdit()) return;
                 try {
                     let imported = JSON.parse(e.target.result);
-                    if(imported.members) {
-                        members = imported.members;
-                        currentSchedule = imported.schedule || {}; historySchedule = imported.history || {};
-                        historyArchive = imported.archive || (historySchedule && Object.keys(historySchedule).length ? [{ date: "Khôi phục từ file", schedule: historySchedule }] : []);
-                        currentOff = imported.off || []; weekModeText = imported.mode || "Đã tải từ file";
-                        slotsConfig = imported.config || defaultSlotsConfig; holidays = imported.holidays || [];
-                        saveData(); alert("✅ Phục hồi thành công!");
-                    }
+                    if (!imported.members) throw new Error('File thiếu danh sách thành viên');
+                    const normalized = normalizeState({...imported, archive:imported.archive || (imported.history ? [{date:'Khôi phục từ file',schedule:imported.history}] : [])});
+                    if (!confirm('Nhập file sẽ thay dữ liệu dùng chung của cả cư xá. Bạn đã kiểm tra đúng bản sao lưu?')) return;
+                    const version = lastSyncedUpdatedAt;
+                    applyRemoteState({...normalized, updatedAt:version});
+                    if (await saveData()) alert('✅ Phục hồi thành công!');
                 } catch(err) { alert("❌ Lỗi file!"); }
             };
             reader.readAsText(file);
@@ -1284,21 +1455,21 @@
 
         // V38: Cho phép sửa trực tiếp số liệu Ca Hoàn Thành/Bùng/Đã Bù qua giao diện, thay vì phải vào
         // mục Debug sửa JSON thô - dùng khi cần khắc phục dữ liệu cũ bị sai do các bản trước đó.
-        function saveManualStatsEdit() {
+        async function saveManualStatsEdit() {
+            if (!canEdit()) return;
             let m = members.find(x => x.name === currentPenaltyMember);
             if (!m) return;
-            let done = parseInt(document.getElementById('pen-edit-done').value, 10);
-            let missed = parseInt(document.getElementById('pen-edit-missed').value, 10);
-            let debtsPaid = parseInt(document.getElementById('pen-edit-debtspaid').value, 10);
-            if (isNaN(done) || isNaN(missed) || isNaN(debtsPaid) || done < 0 || missed < 0 || debtsPaid < 0) {
+            let done = Number(document.getElementById('pen-edit-done').value.trim() || NaN);
+            let missed = Number(document.getElementById('pen-edit-missed').value.trim() || NaN);
+            let debtsPaid = Number(document.getElementById('pen-edit-debtspaid').value.trim() || NaN);
+            if (!Number.isSafeInteger(done) || !Number.isSafeInteger(missed) || !Number.isSafeInteger(debtsPaid) || done < 0 || missed < 0 || debtsPaid < 0) {
                 return alert("⚠️ Vui lòng nhập số hợp lệ (không âm) cho cả 3 ô!");
             }
             if (!confirm(`Xác nhận sửa số liệu của ${m.name} thành: Hoàn Thành=${done}, Bùng=${missed}, Đã Bù=${debtsPaid}?`)) return;
             m.stats.done = done;
             m.stats.missed = missed;
             m.stats.debtsPaid = debtsPaid;
-            saveData();
-            alert("✅ Đã cập nhật số liệu!");
+            if (await saveData()) alert("✅ Đã cập nhật số liệu!");
         }
         function closePenaltyModal() { document.getElementById('penaltyModal').style.display = 'none'; currentPenaltyMember = null; }
         function renderPenaltyList() {
@@ -1312,18 +1483,23 @@
             });
             container.innerHTML = html;
         }
-        function toggleDebtFreeze(idx) { let m = members.find(x => x.name === currentPenaltyMember); m.debts[idx].frozen = !m.debts[idx].frozen; saveData(); renderPenaltyList(); }
-        function deleteDebt(idx) { let m = members.find(x => x.name === currentPenaltyMember); m.debts.splice(idx, 1); saveData(); renderPenaltyList(); }
+        function toggleDebtFreeze(idx) {
+            if (!canEdit()) return;let m = members.find(x => x.name === currentPenaltyMember); m.debts[idx].frozen = !m.debts[idx].frozen; saveData(); renderPenaltyList(); }
+        function deleteDebt(idx) {
+            if (!canEdit()) return;let m = members.find(x => x.name === currentPenaltyMember); m.debts.splice(idx, 1); saveData(); renderPenaltyList(); }
         function addManualPenalty() {
+            if (!canEdit()) return;
             let m = members.find(x => x.name === currentPenaltyMember);
             m.debts.push({ day: document.getElementById('pen-day').value, task: document.getElementById('pen-task').value, frozen: false });
             saveData(); renderPenaltyList();
         }
         function addWeekPenalty() {
+            if (!canEdit()) return;
             let m = members.find(x => x.name === currentPenaltyMember);
             days.forEach(d => m.debts.push({ day: d, task: 'san', frozen: false }));
             saveData(); renderPenaltyList(); alert(`Đã phạt ${m.name} trực sân 7 ngày!`);
         }
+        window.addEventListener('keydown', event => { if (event.key === 'Escape') { closeSyncModal(); closePenaltyModal(); } });
         window.onclick = function(event) { let modal = document.getElementById('penaltyModal'); if (event.target == modal) closePenaltyModal(); }
 
 
@@ -1340,7 +1516,8 @@
         }
 
         function tryGenerate(allowCycleBreak, allowBalanceBreak, allowBusyBreak) {
-            let tempMembers = JSON.parse(JSON.stringify(members)); 
+            let tempMembers = JSON.parse(JSON.stringify(members));
+            returnAssignedDebts(tempMembers, currentSchedule);
             let tempSchedule = {}; days.forEach(d => tempSchedule[d] = {}); let tempOff = [];
             
             let availableSlots = [];
@@ -1351,6 +1528,7 @@
             });
 
             let activeMembers = tempMembers.filter(m => !m.isLongLeave);
+            autoResetCycles(activeMembers);
             if (availableSlots.length === 0) return { tempSchedule, tempMembers, localModeText: "🌴 Tuần này cư xá nghỉ xả hơi trọn tuần!", tempOff };
 
             // 🔥 Xóa nợ tức thì cho thuật toán Auto
@@ -1362,12 +1540,12 @@
                     let debt = m.debts[i];
                     if (debt.frozen || holidays.includes(debt.day)) continue; 
 
-                    const noCollisionThatDay = (day) => !Object.values(tempSchedule[day] || {}).some(t => t.name === m.name);
+                    const noCollisionThatDay = day => !m.busyDays.includes(day) && !Object.values(tempSchedule[day] || {}).some(t => stripStatusPrefix(t.name) === m.name);
                     
                     let slotIdx = noCollisionThatDay(debt.day) ? availableSlots.findIndex(s => s.day === debt.day && s.task === debt.task) : -1;
                     if (slotIdx !== -1) {
                         let slot = availableSlots.splice(slotIdx, 1)[0];
-                        tempSchedule[slot.day][slot.task] = { name: m.name, isDebt: true, status: 'pending' };
+                        tempSchedule[slot.day][slot.task] = { name: m.name, isDebt: true, status: 'pending', debt: {...debt} };
                         m.debts.splice(i, 1); // Trừ nợ luôn
                     } else {
                         // Ưu tiên slot khác ngày, đúng loại việc, và người này chưa có ca hôm đó
@@ -1379,7 +1557,7 @@
                         }
                         if (altIdx !== -1 && altIdx !== undefined && availableSlots.length > 0) {
                             let altSlot = availableSlots.splice(altIdx, 1)[0];
-                            tempSchedule[altSlot.day][altSlot.task] = { name: m.name, isDebt: true, status: 'pending' };
+                            tempSchedule[altSlot.day][altSlot.task] = { name: m.name, isDebt: true, status: 'pending', debt: {...debt} };
                             m.debts.splice(i, 1); // Trừ nợ luôn
                         }
                         // Nếu vẫn không tìm được slot hợp lệ (mọi ngày đều đã có ca) -> để nợ lại xử lý tuần sau, KHÔNG xếp trùng ngày.
@@ -1392,7 +1570,7 @@
 
             let baseShifts = Math.floor(normalSlotsLeft / M);
             let remainder = normalSlotsLeft % M;
-            let targets = {}; activeMembers.forEach(m => targets[m.name] = baseShifts);
+            let targets = Object.create(null); activeMembers.forEach(m => targets[m.name] = baseShifts);
             let localModeText = "";
 
             if (baseShifts === 0) {
@@ -1407,7 +1585,6 @@
                 
                 let offPool = shuffleArray(offCandidates).slice(0, offCount);
                 offPool.forEach(name => {
-                    tempMembers.find(m => m.name === name).offCycle = true;
                     targets[name] = 0; tempOff.push(name);
                 });
                 activeMembers.forEach(m => { if (!offPool.includes(m.name)) targets[m.name] = 1; });
@@ -1421,7 +1598,6 @@
                     }
                     let extraPool = shuffleArray(extraCandidates).slice(0, remainder);
                     extraPool.forEach(name => {
-                        tempMembers.find(m => m.name === name).extraCycle = true;
                         targets[name] += 1;
                     });
                     localModeText = `Thiếu người. Gánh ca (+1): ${extraPool.join(", ")}`;
@@ -1438,7 +1614,7 @@
             function pickPerson(slot, mustHaveNvsCycle = null, mustHaveFridgeCycle = null) {
                 let idx = pool.findIndex(a => {
                     let m = activeMembers.find(x => x.name === a);
-                    let noCollision = !Object.values(tempSchedule[slot.day]).some(t => t.name === a);
+                    let noCollision = !Object.values(tempSchedule[slot.day]).some(t => stripStatusPrefix(t.name) === a);
                     let notBusy = !(m.busyDays && m.busyDays.includes(slot.day));
                     let passNvs = mustHaveNvsCycle === false ? !m.nvsCycle : true;
                     let passFridge = mustHaveFridgeCycle === false ? !m.fridgeCycle : true;
@@ -1448,7 +1624,7 @@
                 if (idx === -1 && allowCycleBreak) { 
                     idx = pool.findIndex(a => {
                         let m = activeMembers.find(x => x.name === a);
-                        let noCollision = !Object.values(tempSchedule[slot.day]).some(t => t.name === a);
+                        let noCollision = !Object.values(tempSchedule[slot.day]).some(t => stripStatusPrefix(t.name) === a);
                         let notBusy = !(m.busyDays && m.busyDays.includes(slot.day));
                         return noCollision && notBusy;
                     });
@@ -1459,7 +1635,7 @@
                 // không có tác dụng thật sự và AI nhảy thẳng từ "phá cycle" sang "ép người bận".)
                 if (idx === -1 && allowBalanceBreak) {
                     let freeIdx = activeMembers.findIndex(m => {
-                        let noCollision = !Object.values(tempSchedule[slot.day]).some(t => t.name === m.name);
+                        let noCollision = !Object.values(tempSchedule[slot.day]).some(t => stripStatusPrefix(t.name) === m.name);
                         let notBusy = !(m.busyDays && m.busyDays.includes(slot.day));
                         return noCollision && notBusy;
                     });
@@ -1471,7 +1647,7 @@
                 }
                 
                 if (idx === -1 && allowBusyBreak) {
-                    idx = pool.findIndex(a => !Object.values(tempSchedule[slot.day]).some(t => t.name === a));
+                    idx = pool.findIndex(a => !Object.values(tempSchedule[slot.day]).some(t => stripStatusPrefix(t.name) === a));
                     if(idx !== -1) {
                         let pickedName = pool[idx];
                         pool.splice(idx, 1);
@@ -1512,6 +1688,8 @@
                 tempSchedule[slot.day][slot.task] = { name: person, isDebt: false, status: 'pending' };
             });
 
+            tempOff = activeMembers.filter(m => !days.some(day => Object.values(tempSchedule[day]).some(cell => stripStatusPrefix(cell.name) === m.name))).map(m => m.name);
+            if (baseShifts === 0) localModeText = `Dư người. Danh sách OFF: ${tempOff.join(', ') || 'Không có'}`;
             return { tempSchedule, tempMembers, localModeText, tempOff };
         }
 
@@ -1519,6 +1697,7 @@
         // đảm nhận 2 việc cùng ngày, nên nếu 1 ngày nào đó cần nhiều đầu việc hơn số người đang hoạt động,
         // việc xếp lịch chắc chắn bất khả thi (chạy 2000 lần cũng vô ích).
         function checkFeasibility(activeMembers) {
+            if (!days.some(day => !holidays.includes(day) && taskKeys.some(task => slotsConfig[task]?.includes(day)))) return null;
             if (activeMembers.length === 0) return "Tất cả mọi người đều đang Nghỉ Dài Hạn, không còn ai để xếp lịch!";
             let problems = [];
             days.forEach(day => {
@@ -1560,13 +1739,17 @@
         }
 
         async function generateSchedule() {
+            if (!canEdit()) return;
             if (isEditMode) return alert("Vui lòng Lưu Chỉnh Sửa trước khi Xếp tự động!");
             if (await warnIfStale("xếp lịch mới")) return;
+            if (!canEdit()) return;
+            const previousConfig = slotsConfig;
             
             let activeMembers = members.filter(m => !m.isLongLeave);
 
             let feasibilityError = checkFeasibility(activeMembers);
             if (feasibilityError) {
+                if (!activeMembers.length) return alert(feasibilityError);
                 let { newConfig, removed } = suggestFeasibleConfig(activeMembers);
                 if (removed.length === 0) return alert("⚠️ " + feasibilityError);
                 let diffText = removed.map(r => `- Bỏ "${taskNamesMap[r.task]}" khỏi ${r.day}`).join('\n');
@@ -1576,8 +1759,6 @@
                 feasibilityError = checkFeasibility(activeMembers);
                 if (feasibilityError) return alert("⚠️ Vẫn chưa đủ khớp, cần giảm bớt đầu việc nhiều hơn hoặc bổ sung thêm thành viên:\n" + feasibilityError);
             }
-
-            autoResetCycles(activeMembers);
 
             let success = false;
             let bestResult = null;
@@ -1600,14 +1781,17 @@
                 currentOff = bestResult.tempOff;
                 saveData();
             } else {
+                slotsConfig = previousConfig;
                 alert("⚠️ Không tìm được cách xếp lịch phù hợp sau 2000 lần thử. Đây là trường hợp hiếm gặp (thường do quá nhiều người cùng bận trùng ngày) - hãy thử giảm bớt lịch bận cá nhân rồi bấm lại.");
             }
         }
 
         async function chotTuan() {
+            if (!canEdit()) return;
             if (isEditMode) return alert("Vui lòng Lưu Chỉnh Sửa (tắt chế độ sửa thủ công) trước khi Chốt Tuần!");
             if (Object.keys(currentSchedule).length === 0) return alert("Chưa có lịch tuần này!");
             if (await warnIfStale("chốt tuần")) return;
+            if (!canEdit()) return;
 
             let pendingCount = 0;
             days.forEach(day => {
@@ -1620,6 +1804,17 @@
             let warnMsg = pendingCount > 0 ? `\n\n⚠️ Còn ${pendingCount} ca chưa được chấm Hoàn Thành/Bùng - các ca này sẽ KHÔNG được tính điểm hay trừ/cộng nợ!` : '';
             if (!confirm("Chốt lịch tuần? Bùng trực bị cộng 1 nợ. Nợ đã được trừ ngay khi lên bảng." + warnMsg)) return;
 
+            const activeCount = members.filter(m => !m.isLongLeave).length;
+            const normalSlots = days.reduce((count,day) => count + (holidays.includes(day) ? 0 : Object.values(currentSchedule[day] || {}).filter(cell => cell.name && !cell.isDebt).length), 0);
+            const baseShifts = activeCount ? Math.floor(normalSlots / activeCount) : 0;
+            for (const m of members) {
+                if (m.isLongLeave) continue;
+                if (!getShiftCount(m.name)) m.offCycle = true;
+                const doneNormal = days.reduce((count,day) => count + (holidays.includes(day) ? 0 : Object.values(currentSchedule[day] || {}).filter(cell => stripStatusPrefix(cell.name) === m.name && !cell.isDebt && cell.status === 'done').length), 0);
+                if (doneNormal > baseShifts) m.extraCycle = true;
+            }
+
+            returnAssignedDebts(members, currentSchedule, (cell,day) => holidays.includes(day) || cell.status === 'pending');
             days.forEach(day => {
                 if(holidays.includes(day)) {
                     taskKeys.forEach(task => { if (!currentSchedule[day]) currentSchedule[day] = {}; currentSchedule[day][task] = { holiday: true }; });
@@ -1634,7 +1829,7 @@
 
                     if (cell.status === 'missed') {
                         // V22: Phát sinh nợ mới
-                        m.debts.push({day: day, task: task, frozen: false});
+                        m.debts.push(normalizeDebt(cell.debt || {day,task,frozen:false}));
                         m.stats.missed++;
                     } else if (cell.status === 'done') {
                         // V22: Nợ đã trừ sẵn lúc xếp, giờ chỉ ghi nhận cycle
@@ -1659,33 +1854,30 @@
             historyArchive.unshift({ date: new Date().toLocaleDateString('vi-VN'), schedule: historySchedule });
             if (historyArchive.length > MAX_ARCHIVE_WEEKS) historyArchive = historyArchive.slice(0, MAX_ARCHIVE_WEEKS);
             currentSchedule = {}; currentOff = []; weekModeText = "Chưa có dữ liệu";
-            saveData();
-            alert("✅ Chốt tuần thành công! Điểm số đã được cập nhật vào Bảng Phong Thần.");
+            if (!await saveData()) return;
+            alert("✅ Chốt tuần thành công! Điểm số đã được cập nhật vào Thống kê trực.");
         }
 
         // 🔥 HOÀN TRẢ NỢ KHI XÓA BẢNG LỊCH
-        function resetData() { 
+        function resetData() {
+            if (!canEdit()) return;
             if(confirm("Xóa trắng lịch hiện tại? Mọi khoản nợ đang được xếp trên bảng sẽ hoàn trả lại về hồ sơ người dùng.")) { 
                 
-                days.forEach(day => {
-                    if (currentSchedule[day]) {
-                        for (let task in currentSchedule[day]) {
-                            let cell = currentSchedule[day][task];
-                            if (cell.isDebt) {
-                                let rawName = stripStatusPrefix(cell.name); 
-                                let m = members.find(x => x.name === rawName);
-                                if(m) m.debts.push({day: day, task: task, frozen: false});
-                            }
-                        }
-                    }
-                });
+                returnAssignedDebts(members, currentSchedule);
 
-                currentSchedule = {}; 
+                currentSchedule = {}; currentOff = [];
                 weekModeText = "Chưa có dữ liệu"; 
                 saveData(); 
             } 
         }
-        renderUI();
+        try {
+            applyRemoteState({members,schedule:currentSchedule,archive:historyArchive,off:currentOff,
+                mode:weekModeText,config:slotsConfig,holidays});
+        } catch (error) {
+            localStorage.setItem('cuxa_invalid_state', JSON.stringify({members,schedule:currentSchedule,archive:historyArchive,off:currentOff,mode:weekModeText,config:slotsConfig,holidays}));
+            console.error(error);
+            applyRemoteState({members});
+        }
         initFirebaseSync();
     </script>
 </body>
